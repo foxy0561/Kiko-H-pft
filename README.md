@@ -28,7 +28,12 @@ Alle Tasten lassen sich unter **Optionen → Steuerung → Tasten belegen** änd
 - **Team-Leben:** Leben gehören dem ganzen Team. Wer stirbt, schwebt als Blase mit; ein Leben geht erst weg, wenn alle erwischt wurden
 - **Große Münzen:** 3 pro Level – öffnen Tore zu Geheimleveln und zum Laden
 - **Laden:** Pilz, Glutbeere, Herz und Funkelstern für Münzen
-- **Power-ups:** klein → groß (Pilz) → Glut (Feuerbälle mit Shift). Treffer stufen eine Stufe ab, Power-ups bleiben über Level erhalten
+- **Power-ups:** Pilz (groß), Glutbeere (Feuerbälle), Eisblume (friert Gegner ein – man kann auf ihnen stehen), Feder (Springen halten zum Gleiten), Mini-Pilz (winzig, springt hoch, ein Treffer zählt). Treffer stufen eine Stufe ab, Power-ups bleiben über Level erhalten
+- **Gegner:** Moosling, Käfer, Igel, Fledermaus, Werfer (wirft Hämmer oder Schneebälle), Schnappblume in Röhren und ein Endboss in jeder Burg
+- **Gegner-Bounce:** Beim Draufspringen Springen gedrückt halten, um hoch abzuprallen
+- **Weltende:** Statistik mit Zeit, Münzen, Gegnern, großen Münzen und Toden
+- **Figur & Hüte:** 12 Hüte, die man durch Erfolge freischaltet
+- **Wettrennen online:** jeder spielt auf seiner eigenen Karte, Mitspieler sieht man als Geister – wer zuerst Welt 1, Welt 1–2 oder alle Welten schafft, gewinnt
 - **Röhren:** auf einer Röhre ducken führt in Bonusräume
 - **Online:** jeder hat seine eigene Kamera, Mitspieler lassen sich tragen und als Blase retten
 - **Musik:** eigene Chiptune-Melodie für Menü, Karte und jede Welt
