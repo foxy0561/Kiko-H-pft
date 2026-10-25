@@ -482,7 +482,7 @@ const CHARS=[
   {name:'Pim',desc:'Katze',kind:'cat',body:'#7d8bdc',dark:'#4a55a0',belly:'#f1eeff'}
 ];
 /* Version: Online spielen nur Spieler mit gleicher Version zusammen */
-const GAME_VERSION=18;
+const GAME_VERSION=19;
 const PAGES_URL='https://foxy0561.github.io/Kiko-H-pft/';
 /* Spielername (wird lokal gespeichert, online an die anderen geschickt) */
 const cleanName=s=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g,'').trim().slice(0,12);
@@ -2732,7 +2732,8 @@ function toggleFs(){
     const r=rq.call(el,{navigationUI:'hide'});if(r&&r.then)r.then(lock,fsFail);else lock();
   }catch(e){fsFail()}
 }
-const onFs=()=>{document.body.classList.toggle('fs',fsOn());if(!isFs()){try{navigator.keyboard&&navigator.keyboard.unlock&&navigator.keyboard.unlock()}catch(e){}}if(cur==='oGfx')refreshOptions()};
+/* Kein eigenes Vollbild-Layout mehr: F sieht genauso aus wie F11 */
+const onFs=()=>{if(!isFs()){try{navigator.keyboard&&navigator.keyboard.unlock&&navigator.keyboard.unlock()}catch(e){}}if(cur==='oGfx')refreshOptions()};
 document.addEventListener('fullscreenchange',onFs);document.addEventListener('webkitfullscreenchange',onFs);addEventListener('resize',onFs);onFs();
 const bar=(v,a,b)=>'▮'.repeat(v-a)+'▯'.repeat(b-v);
 const OPT={
