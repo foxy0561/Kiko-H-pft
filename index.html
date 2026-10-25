@@ -268,7 +268,7 @@ body.fs #wrap{border:0;box-shadow:none;width:min(100vw,calc(100dvh * 5 / 3))}
     <section class="screen card" data-screen="oGfx" hidden>
       <h2>Grafik</h2>
       <div class="btns opts">
-        <button class="btn opt" data-opt="fs"><span>Vollbild (F)</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="fs"><span>Vollbild (F / F11)</span><span class="val"></span></button>
         <button class="btn opt" data-opt="bright"><span>Helligkeit</span><span class="val"></span></button>
         <button class="btn opt" data-opt="smooth"><span>Pixel</span><span class="val"></span></button>
         <button class="btn opt" data-opt="shake"><span>Bildschirm wackeln</span><span class="val"></span></button>
@@ -340,7 +340,7 @@ body.fs #wrap{border:0;box-shadow:none;width:min(100vw,calc(100dvh * 5 / 3))}
         <dt>Röhren</dt><dd>Auf einer Röhre ducken</dd>
         <dt>Karte</dt><dd>Pfeile laufen · Springen betritt Level oder Laden</dd>
         <dt>Stampfen</dt><dd>In der Luft ducken (S, ↓ oder Stick runter)</dd>
-        <dt>Vollbild</dt><dd>F</dd>
+        <dt>Vollbild</dt><dd>F oder F11 (zum Beenden nochmal drücken)</dd>
       </dl>
       <p class="hint">Wandsprung: In der Luft gegen eine Wand drücken, dann rutschst du runter. Springen stößt dich ab. Panzer: Strg halten und reinlaufen, loslassen wirft. Nur groß (mit Pilz) zerbrechen Ziegel. Achtung: Strg + W schließt im Browser den Tab – mit Panzer in der Hand lieber mit Leertaste springen.</p>
       <div class="btns"><button class="btn" data-act="back">Zurück</button></div>
@@ -482,7 +482,7 @@ const CHARS=[
   {name:'Pim',desc:'Katze',kind:'cat',body:'#7d8bdc',dark:'#4a55a0',belly:'#f1eeff'}
 ];
 /* Version: Online spielen nur Spieler mit gleicher Version zusammen */
-const GAME_VERSION=17;
+const GAME_VERSION=18;
 const PAGES_URL='https://foxy0561.github.io/Kiko-H-pft/';
 /* Spielername (wird lokal gespeichert, online an die anderen geschickt) */
 const cleanName=s=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g,'').trim().slice(0,12);
@@ -2715,17 +2715,25 @@ const focusables=()=>cur?[...screens[cur].querySelectorAll('button:not([disabled
 const isFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
 let toastT=null;
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3500)}
-const fsFail=()=>toast('Vollbild geht hier nicht. Öffne die Spiel-Datei direkt im Browser oder drücke F11.');
+const fsFail=()=>toast('Vollbild geht hier nicht – drück F11.');
+/* Vollbild per F11 vom Browser selbst erkennen (das Fenster ist dann so groß wie der Bildschirm) */
+const isF11=()=>!isFs()&&!matchMedia('(pointer: coarse)').matches&&Math.abs(innerHeight-screen.height)<3&&Math.abs(innerWidth-screen.width)<3;
+const fsOn=()=>isFs()||isF11();
+/* F macht dasselbe wie F11: ganzer Bildschirm ohne Browserleisten.
+   Esc beendet es dabei nicht (wie bei F11), Esc bleibt die Pause-Taste – zum Beenden wieder F drücken. */
 function toggleFs(){
   try{
-    if(isFs()){const ex=document.exitFullscreen||document.webkitExitFullscreen;if(ex){const r=ex.call(document);if(r&&r.catch)r.catch(()=>{})}return}
+    if(isF11()){toast('Das Vollbild ist mit F11 an – zum Beenden F11 drücken.');return}
+    if(isFs()){try{navigator.keyboard&&navigator.keyboard.unlock&&navigator.keyboard.unlock()}catch(e){}
+      const ex=document.exitFullscreen||document.webkitExitFullscreen;if(ex){const r=ex.call(document);if(r&&r.catch)r.catch(()=>{})}return}
     const el=document.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen;
     if(!rq){fsFail();return}
-    const r=rq.call(el,{navigationUI:'hide'});if(r&&r.catch)r.catch(fsFail);
+    const lock=()=>{try{if(navigator.keyboard&&navigator.keyboard.lock)navigator.keyboard.lock(['Escape']).catch(()=>{})}catch(e){}};
+    const r=rq.call(el,{navigationUI:'hide'});if(r&&r.then)r.then(lock,fsFail);else lock();
   }catch(e){fsFail()}
 }
-const onFs=()=>{document.body.classList.toggle('fs',isFs());if(cur==='options')refreshOptions()};
-document.addEventListener('fullscreenchange',onFs);document.addEventListener('webkitfullscreenchange',onFs);
+const onFs=()=>{document.body.classList.toggle('fs',fsOn());if(!isFs()){try{navigator.keyboard&&navigator.keyboard.unlock&&navigator.keyboard.unlock()}catch(e){}}if(cur==='oGfx')refreshOptions()};
+document.addEventListener('fullscreenchange',onFs);document.addEventListener('webkitfullscreenchange',onFs);addEventListener('resize',onFs);onFs();
 const bar=(v,a,b)=>'▮'.repeat(v-a)+'▯'.repeat(b-v);
 const OPT={
   sound:['bool'],music:['bool'],menuSnd:['bool'],shake:['bool'],particles:['bool'],names:['bool'],fps:['bool'],autorun:['bool'],vib:['bool'],timer:['bool'],
@@ -2739,7 +2747,7 @@ const OPT={
 };
 const DIFF_TXT=['Leicht: Gegner langsamer, 400 Sekunden.','Normal: 300 Sekunden.','Schwer: Gegner schneller, nur 200 Sekunden.'];
 function optVal(o){
-  if(o==='fs')return isFs()?'An':'Aus';
+  if(o==='fs')return fsOn()?'An':'Aus';
   const d=OPT[o];if(!d)return'';const v=settings[o];
   if(d[0]==='bool')return v?'An':'Aus';
   if(d[0]==='bar')return bar(v,d[1],d[2]);

@@ -14,7 +14,7 @@ Ein Jump'n'Run im Retro-Stil für den Browser – allein, zu viert an einem Ger�
 | Rennen | Shift | X |
 | Aufheben / Mitspieler tragen | Strg | Y |
 | Pause | Esc oder P | Start |
-| Vollbild | F | – |
+| Vollbild | F oder F11 | – |
 
 Alle Tasten lassen sich unter **Optionen → Steuerung → Tasten belegen** ändern.
 
