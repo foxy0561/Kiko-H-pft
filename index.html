@@ -489,7 +489,7 @@ const CHARS=[
   {name:'Pim',desc:'Katze',kind:'cat',body:'#7d8bdc',dark:'#4a55a0',belly:'#f1eeff'}
 ];
 /* Version: Online spielen nur Spieler mit gleicher Version zusammen */
-const GAME_VERSION=22;
+const GAME_VERSION=23;
 const PAGES_URL='https://foxy0561.github.io/Kiko-H-pft/';
 /* Spielername (wird lokal gespeichert, online an die anderen geschickt) */
 const cleanName=s=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g,'').trim().slice(0,12);
@@ -1094,7 +1094,7 @@ function placePlayers(){
   const sx=game.check??2;let n=0;
   for(const p of game.players){if(p.out)continue;
     const[w,h]=p.mini?SIZE.m:p.big?SIZE.b:SIZE.s;
-    Object.assign(p,{w,h,x:sx*T+2+n*12,y:13*T-h,vx:0,vy:0,dead:false,deadT:0,atGoal:false,goalSlot:0,goalBonus:0,inv:60,face:1,jumpHeld:true,combo:0,duck:false,carry:null,wall:0,wallT:0,lockT:0,pound:0,landLag:0,bubble:false,pipeT:0,tp:(p.tp|0)+1});if(p.starNext){p.star=600;p.starNext=false}n++}
+    Object.assign(p,{w,h,x:sx*T+2+n*12,y:13*T-h,vx:0,vy:0,dead:false,deadT:0,atGoal:false,goalSlot:0,goalBonus:0,inv:60,face:1,jumpHeld:true,combo:0,duck:false,carry:null,wall:0,wallT:0,lockT:0,pound:0,landLag:0,bubble:false,pipeT:0,pipeOut:0,tp:(p.tp|0)+1});if(p.starNext){p.star=600;p.starNext=false}n++}
   cam.x=Math.max(0,sx*T-60);
   L.checks.forEach(c=>{if(game.check!==null&&c.x<=game.check)c.on=true});
 }
@@ -1331,7 +1331,7 @@ function kill(p,fell){
   if(p.dead||p.out)return;
   dropCarry(p);if(p.carryP)releaseP(p.carryP,0,-2);if(p.carriedBy)releaseP(p,0,0);
   statAdd(p,'d');
-  p.dead=true;p.deadT=0;p.vx=0;p.vy=fell?0:-5;p.big=false;p.fire=false;p.ice=false;p.feather=false;p.mini=false;p.star=0;p.pipeT=0;p.duck=false;p.wall=0;p.pound=0;ev('hurt');
+  p.dead=true;p.deadT=0;p.vx=0;p.vy=fell?0:-5;p.big=false;p.fire=false;p.ice=false;p.feather=false;p.mini=false;p.star=0;p.pipeT=0;p.pipeOut=0;p.duck=false;p.wall=0;p.pound=0;ev('hurt');
 }
 function hurt(p){
   if(p.inv>0||p.dead||p.star>0)return;
@@ -1446,7 +1446,10 @@ function pipeUnder(p){const ty=Math.floor((p.y+p.h+1)/T);return L.pipes.find(q=>
 function pipeExit(p){
   const to=p.pipeTo;if(!to)return;
   const group=(!net.mode&&game.players.length>1)?game.players.filter(q=>!q.dead&&!q.out&&!q.bubble):[p];
-  group.forEach((q,i)=>{q.x=to.x*T+2+i*4;q.y=to.y*T-q.h;q.vx=0;q.vy=0;q.pipeT=0;q.jumpHeld=true;q.pipeLock=true;if(q.carryP)releaseP(q.carryP,0,0)});
+  /* kommt man in einer Röhre an, steigt man langsam aus ihr heraus */
+  const outPipe=tileAt(to.x,to.y)==='y';
+  group.forEach((q,i)=>{q.x=to.x*T+(outPipe?(32-q.w)/2+i*3-(group.length-1)*1.5:2+i*4);q.vx=0;q.vy=0;q.pipeT=0;q.jumpHeld=true;q.pipeLock=true;if(q.carryP)releaseP(q.carryP,0,0);
+    if(outPipe){q.y=to.y*T+2;q.pipeOut=q.h+2;q.pipeTop=to.y;q.duck=false}else q.y=to.y*T-q.h});
   if(!net.mode)cam.x=Math.max(0,Math.min(p.x+p.w/2-W/2,L.w*T-W));
   ev('pipe');
 }
@@ -1492,6 +1495,7 @@ function updatePlayer(p){
   if(p.star>0&&!p.local)p.star--;
   /* in eine Röhre sinken */
   if(p.pipeT>0){p.pipeT--;p.y+=1;p.vx=0;p.vy=0;p.step=0;if(p.pipeT===0)pipeExit(p);return}
+  if(p.pipeOut>0){p.pipeOut--;p.y-=1;p.vx=0;p.vy=0;p.step=0;p.onGround=false;p.prevBottom=p.y+p.h;if(p.inv>0)p.inv--;return}
   if(!inp.down)p.pipeLock=false;
   if(inp.down&&p.onGround&&!p.carry&&!p.carryP&&!p.pipeLock){const q=pipeUnder(p);
     if(q&&q.to){if(p.duck){p.duck=false;const[w,h]=sizeFor(p);setSize(p,w,h)}p.pipeT=20;p.pipeTo=q.to;p.pipeTop=q.top;p.vx=0;if(p.local)playEv('pipe',0,0,'');else ev('pipe');return}}
@@ -1835,7 +1839,7 @@ function tick(){
     if(p.atGoal)continue;
     if(p.remoteActive||p.carriedBy){for(const it of L.items){if(!it.gone&&it.rise<=0&&overlap(p,it)){it.gone=true;applyItem(p,it.kind)}}continue}
     for(const e of L.enemies){
-      if(e.st==='fall'||e.st==='squash'||e.st==='carry'||!overlap(p,e))continue;
+      if(e.st==='fall'||e.st==='squash'||e.st==='carry'||p.pipeT>0||p.pipeOut>0||!overlap(p,e))continue;
       playerVsEnemy(p,e);if(p.dead)break;
     }
     for(const it of L.items){if(!it.gone&&it.rise<=0&&overlap(p,it)){it.gone=true;applyItem(p,it.kind)}}
@@ -2174,7 +2178,7 @@ function drawPlayers(cx){
     if(p.inPipe&&!p.local)continue;
     const x=Math.round(p.x-cx),y=Math.round(p.y);
     let C=CHARS[p.ch|0];if(p.star>0)C={...C,body:RAINBOW[(frame>>2)%6],dark:RAINBOW[((frame>>2)+2)%6]};
-    const clip=p.pipeT>0&&p.pipeTop!==undefined;
+    const clip=(p.pipeT>0||p.pipeOut>0)&&p.pipeTop!==undefined;
     if(clip){ctx.save();ctx.beginPath();ctx.rect(x-12,-50,p.w+24,p.pipeTop*T+50);ctx.clip()}
     drawHero(x,y,p.w,p.h,C,game.players.length>1?COLORS[p.id].c:null,p.face,p.step|0,{dead:p.dead,carry:!!p.carry||!!p.carryP||p.carrying,wall:!!p.wall,pound:p.pound===2,fire:!!p.fire,ice:!!p.ice,feather:!!p.feather,glide:!!p.glide,hat:p.hat|0});
     if(clip)ctx.restore();
@@ -2649,7 +2653,7 @@ function hostStart(){
 function sendSnap(){
   if(!net.gr)return;
   const r=Math.round;
-  const P=game.players.map(p=>[p.id,r(p.x),r(p.y),p.face,(p.dead?1:0)|(p.out?2:0)|(p.big?4:0)|(p.duck?8:0)|(p.inv>0?32:0)|(p.carry||p.carryP?64:0)|(p.step?128:0)|(p.wall?256:0)|(p.pound===2?512:0)|(p.bubble?1024:0)|(p.carriedBy?2048:0)|(p.star>0?4096:0)|(p.fire?8192:0)|(p.pipeT>0?16384:0)|(p.atGoal?32768:0)|(p.ice?65536:0)|(p.feather?131072:0)|(p.mini?262144:0)|(p.glide?524288:0),
+  const P=game.players.map(p=>[p.id,r(p.x),r(p.y),p.face,(p.dead?1:0)|(p.out?2:0)|(p.big?4:0)|(p.duck?8:0)|(p.inv>0?32:0)|(p.carry||p.carryP?64:0)|(p.step?128:0)|(p.wall?256:0)|(p.pound===2?512:0)|(p.bubble?1024:0)|(p.carriedBy?2048:0)|(p.star>0?4096:0)|(p.fire?8192:0)|(p.pipeT>0||p.pipeOut>0?16384:0)|(p.atGoal?32768:0)|(p.ice?65536:0)|(p.feather?131072:0)|(p.mini?262144:0)|(p.glide?524288:0),
     p.w,p.h,p.lives,p.coins,p.score,p.ch,p.name||'',p.tp|0,p.imp|0,Math.round((p.impVy||0)*10)/10,Math.round(p.vx*10)/10,Math.round(p.vy*10)/10,p.carriedBy?p.carriedBy.id:-1,p.hat|0]);
   const dist=e=>{let d=1e9;for(const p of game.players)if(!p.out)d=Math.min(d,Math.abs(p.x-e.x));return d};
   const E=L.enemies.filter(e=>inViews(e.x,48)).sort((a,b)=>dist(a)-dist(b)).slice(0,22).map(e=>[e.id,e.type,EST.indexOf(e.st),r(e.x),r(e.y),e.vx>0?1:0,
