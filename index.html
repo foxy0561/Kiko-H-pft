@@ -482,7 +482,7 @@ const CHARS=[
   {name:'Pim',desc:'Katze',kind:'cat',body:'#7d8bdc',dark:'#4a55a0',belly:'#f1eeff'}
 ];
 /* Version: Online spielen nur Spieler mit gleicher Version zusammen */
-const GAME_VERSION=19;
+const GAME_VERSION=20;
 const PAGES_URL='https://foxy0561.github.io/Kiko-H-pft/';
 /* Spielername (wird lokal gespeichert, online an die anderen geschickt) */
 const cleanName=s=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g,'').trim().slice(0,12);
@@ -1927,44 +1927,209 @@ function drawChecks(cx){
     R(x,10*T+4,2,3*T-4,'#5b4630');R(x+2,10*T+4,12,8,c.on?'#5fd068':'#8b86b8');R(x+2,10*T+4,12,1,'rgba(255,255,255,.4)')}
 }
 /* Eine Figur in beliebiger Größe; pc = Spielerfarbe (Halstuch) */
+/* ---------- Figuren als Pixel-Art (nach rechts schauend) ----------
+   k Umriss · b Körper · d dunkel · l hell · w Bauch · e Augenweiß · p Pupille · r Wange
+   g/G Blatt · i Ohr innen · m Schnauze · t Schwanzspitze · s Halstuch · o Mund · y Streifen */
+const FEET={
+  s:[["..kdk..kdk..",".kkkk.kkkk.."],[".kdk....kdk.","kkkk....kkkk"]],
+  b:[["...kddk..kddk.","..kkkkk.kkkkk."],["..kddk....kddk",".kkkkk...kkkkk"]],
+  fs:[[".kddk..kddk.","kkkkk..kkkkk"],["kddk....kddk","kkkk....kkkk"]],
+  fb:[["..kdddk.kdddk.",".kkkkkk.kkkkkk"],[".kdddk...kdddk","kkkkkk..kkkkkk"]]
+};
+const BELLY_B=["kssssssssssssk","kbbwwwwwwwwbbk","kbwwwwwwwwwwbk","kbwwwwwwwwwwbk","kbwwwwwwwwwwbk","kdwwwwwwwwwwdk","kdbwwwwwwwwbdk",".kdbwwwwwwbdk.",".kddbbbbbbddk.","..kddddddddk..","...kkkkkkkk..."];
+const SPR={
+  sprout:{
+    s:{ox:0,oy:0,feet:'s',rows:[
+      "....kk......",
+      "...kggk.....",
+      "...kgGGk....",
+      "..kkkGkkkk..",
+      ".kbllbbbbbk.",
+      "kblbbbbbbbbk",
+      "kbbbbbeebeek",
+      "kbbbbbepbepk",
+      "kbbbbrepbepk",
+      "kbbbbbbbkkrk",
+      "kssssssssssk",
+      ".kdwwwwwwdk.",
+      "..kkkkkkkk.."]},
+    b:{ox:0,oy:0,feet:'b',rows:[
+      ".....kk.......",
+      "....kggk......",
+      "....kgGGk.....",
+      "...kkkGkkkk...",
+      "..kbbllbbbbk..",
+      ".kbllbbbbbbbk.",
+      "kbllbbbbbbbbbk",
+      "kblbbbbbeebeek",
+      "kbbbbbbbepbepk",
+      "kbbbbbbrepbepk",
+      "kbbbbbbbbbkkrk",
+      ...BELLY_B]}
+  },
+  fox:{
+    s:{ox:-4,oy:0,feet:'s',rows:[
+      "    .kk.....kk..",
+      "    .kik...kik..",
+      "    .kbikkkibk..",
+      "    kbbbbbbbbbk.",
+      "    kblbbbbbbbbk",
+      ".kk.kbbbbeebeebk",
+      "kbbkkbbbbepbepbk",
+      "kbbkkbbbmmmmmmkk",
+      "kbbbkbbbbmmmmmk.",
+      "kttbbkbbbbbbbbk.",
+      ".kttkssssssssssk",
+      "..kk.kdwwwwwwdk.",
+      "......kkkkkkkk.."]},
+    b:{ox:-5,oy:0,feet:'b',rows:[
+      "     .kk.......kk..",
+      "     .kik.....kik..",
+      "     .kiik...kiik..",
+      "     .kbbikkkibbk..",
+      "     kbblbbbbbbbbk.",
+      "     kblbbbbbbbbbbk",
+      "     kbbbbbbeebeebk",
+      "     kbbbbbbepbepbk",
+      "     kbbbbbbepbepbk",
+      "     kbbbbmmmmmmmkk",
+      "..kk.kbbbbbmmmmmmk.",
+      ".kbbkkkbbbbbbbbbbk.",
+      "kbbbbkssssssssssssk",
+      "kbbbbkbbwwwwwwwwbbk",
+      "kbbbbkbwwwwwwwwwwbk",
+      "kbbbbbbwwwwwwwwwwbk",
+      "kttbbkbwwwwwwwwwwbk",
+      "kttttkdwwwwwwwwwwdk",
+      ".kttkkdbwwwwwwwwbdk",
+      "..kk..kdbwwwwwwbdk.",
+      "......kddbbbbbbddk.",
+      ".......kddddddddk..",
+      "........kkkkkkkk..."]}
+  },
+  cat:{
+    s:{ox:-4,oy:0,feet:'s',rows:[
+      "    .k......k...",
+      "    .kk....kk...",
+      ".kk..kik..kik...",
+      "kbk.kbbbbbbbbbk.",
+      "kbk.kblbbbbbbbbk",
+      "kbk.kbbbbeebeebk",
+      "kbk.kbybbepbepbk",
+      "kbk.kbbbbbbbibbk",
+      "kbkkkybbbbbkbkbk",
+      ".kbbbkbbbbbbbbk.",
+      "..kkkssssssssssk",
+      ".....kdwwwwwwdk.",
+      "......kkkkkkkk.."]},
+    b:{ox:-5,oy:0,feet:'b',rows:[
+      "     .k........k...",
+      "     .kk......kk...",
+      "     .kik....kik...",
+      ".kk..kbik..kibk...",
+      "kbk..kbblbbbbbbbbk.",
+      "kbk..kblbbbbbbbbbbk",
+      "kbk..kbybbbbeebeebk",
+      "kbk..kbbybbbepbepbk",
+      "kbk..kbybbbbepbepbk",
+      "kbk..kbbbbbbbbbibbk",
+      "kbk..kbybbbbbkbkbbk",
+      "kbk...kbbbbbbbbbbk.",
+      "kbbk.kssssssssssssk",
+      ".kbbkkbbwwwwwwwwbbk",
+      "..kbbbbwwwwwwwwwwbk",
+      "...kkkbwwwwwwwwwwbk",
+      "     kbwwwwwwwwwwbk",
+      "     kdwwwwwwwwwwdk",
+      "     kdbwwwwwwwwbdk",
+      "     .kdbwwwwwwbdk.",
+      "     .kddbbbbbbddk.",
+      "     ..kddddddddk..",
+      "     ...kkkkkkkk..."]}
+  },
+  frog:{
+    s:{ox:0,oy:-3,feet:'fs',rows:[
+      "..kkk...kkk.",
+      ".keeek.keeek",
+      ".keepk.keepk",
+      "kbeepbbbeepk",
+      "kbbbbbbbbbbk",
+      "kbrbbbbbbbrk",
+      "kboooooooobk",
+      "kbbbbbbbbbbk",
+      "kssssssssssk",
+      "kbwwwwwwwwbk",
+      "kbwwwwwwwwbk",
+      "kdbwwwwwwbdk",
+      ".kdbbbbbbdk.",
+      ".kddddddddk.",
+      "..kkkkkkkk.."]},
+    b:{ox:0,oy:-3,feet:'fb',rows:[
+      "..kkkk..kkkk..",
+      ".keeeek.keeeek",
+      ".keeepk.keeepk",
+      "kbeeepbbbeeepk",
+      "kblbbbbbbbbbbk",
+      "kbbbbbbbbbbbbk",
+      "kbrbbbbbbbbbrk",
+      "kboooooooooobk",
+      "kbbbbbbbbbbbbk",
+      "kbbbbbbbbbbbbk",
+      "kssssssssssssk",
+      "kbbwwwwwwwwbbk",
+      "kbwwwwwwwwwwbk",
+      "kbwwwwwwwwwwbk",
+      "kbwwwwwwwwwwbk",
+      "kbwwwwwwwwwwbk",
+      "kbwwwwwwwwwwbk",
+      "kdwwwwwwwwwwdk",
+      "kdbwwwwwwwwbdk",
+      ".kdbwwwwwwbdk.",
+      ".kddbbbbbbddk.",
+      "..kddddddddk..",
+      "...kkkkkkkk..."]}
+  }
+};
+const mixHex=(a,b,t)=>{const p=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16));const x=p(a),y=p(b);return'#'+x.map((v,i)=>Math.round(v+(y[i]-v)*t).toString(16).padStart(2,'0')).join('')};
+const heroCache=new Map();
+function heroSprite(C,size,step,pc,dead){
+  const key=[C.kind,size,step,pc||'',dead?1:0,C.body,C.dark,C.belly].join('|');
+  let sp=heroCache.get(key);if(sp)return sp;
+  const def=SPR[C.kind][size],feet=FEET[def.feet][step],rows=def.rows.map(r=>r.replace(/ /g,'.'));
+  const bw=size==='b'?14:12,pad=-def.ox,all=rows.concat(feet.map(f=>'.'.repeat(pad)+f));
+  const wd=Math.max(...all.map(r=>r.length)),ht=all.length;
+  const col={k:'#1d1430',b:C.body,d:C.dark,l:mixHex(C.body,'#ffffff',.35),w:C.belly,e:'#ffffff',p:'#1d1430',r:'#ff8a9a',g:'#5fd068',G:'#2f7a3a',
+    i:C.kind==='cat'?'#f3b3c8':C.dark,m:'#fff4dc',t:'#fff4dc',s:pc||C.dark,o:C.dark,y:C.dark};
+  if(dead){col.e=C.body;col.p='#1d1430'}
+  const c=document.createElement('canvas');c.width=wd;c.height=ht;const g=c.getContext('2d');
+  all.forEach((r,yy)=>{for(let xx=0;xx<r.length;xx++){const ch=r[xx];if(ch==='.')continue;const v=col[ch];if(!v)continue;g.fillStyle=v;g.fillRect(xx,yy,1,1)}});
+  sp={c,ox:def.ox,oy:def.oy,bw,bh:size==='b'?24:15,eyeRows:-def.oy};
+  if(heroCache.size>400)heroCache.clear();
+  heroCache.set(key,sp);return sp;
+}
+/* Figur in eine beliebige Box (w×h) zeichnen; Ducken/Mini werden passend gestaucht */
+function drawHeroSprite(x,y,w,h,C,pc,face,step,dead,onlyEyes){
+  const sp=heroSprite(C,h>18?'b':'s',step?1:0,pc,dead);
+  const sx=w/sp.bw,sy=h/sp.bh,dx=x+sp.ox*sx,dy=y+sp.oy*sy;
+  ctx.save();ctx.imageSmoothingEnabled=false;
+  if(face<0){ctx.translate(2*x+w,0);ctx.scale(-1,1)}
+  if(onlyEyes){const r=sp.eyeRows;if(r>0)ctx.drawImage(sp.c,0,0,sp.c.width,r,dx,dy,sp.c.width*sx,r*sy)}
+  else ctx.drawImage(sp.c,dx,dy,sp.c.width*sx,sp.c.height*sy);
+  ctx.restore();
+}
+
 function drawHero(x,y,w,h,C,pc,face,step,o={}){
   const big=h>18,k=C.kind;
-  if(k==='fox'){const tx=face>0?x-4:x+w-1;R(tx,y+h-10,5,6,INK);R(tx+1,y+h-9,3,4,C.body);R(face>0?tx+1:tx+3,y+h-9,1,4,'#fff4dc')}
-  if(k==='cat'){const tx=face>0?x-3:x+w+1;R(tx,y+h-14,2,9,INK);R(face>0?tx:tx-2,y+h-7,4,2,INK);R(tx+(face>0?1:0),y+h-13,1,7,C.body)}
-  R(x+2+step,y+h-2,4,2,INK);R(x+w-6-step,y+h-2,4,2,INK);
-  R(x+1,y+3,w-2,h-5,INK);R(x,y+5,w,Math.max(1,h-9),INK);
-  R(x+2,y+4,w-4,h-6,C.body);R(x+1,y+6,w-2,Math.max(1,h-10),C.body);R(x+2,y+h-4,w-4,2,C.dark);
-  const by=y+8+(big?3:0),bh=Math.max(1,h-12-(big?3:0));
-  R(x+3+(face>0?1:0),by,w-6,bh,C.belly);
-  if(pc&&h>11)R(x+1,y+(big?9:7),w-2,1,pc);
-  if(k==='fox'||k==='cat'){
-    const inner=k==='cat'?'#f3b3c8':C.dark;
-    R(x+1,y,3,4,INK);R(x+w-4,y,3,4,INK);R(x+2,y+1,1,3,inner);R(x+w-3,y+1,1,3,inner);
-  }
-  if(k==='frog'){
-    frogEyes(x,y,w,face,o.dead);
-    R(x+3,y+(big?7:6),w-6,1,C.dark);
-  }else{
-    const ex=face>0?x+w-7:x+2,ey=y+5+(big?1:0),eh=big?4:3;
-    if(o.dead){R(ex,ey,1,1,INK);R(ex+1,ey+1,1,1,INK);R(ex+2,ey,1,1,INK);R(ex,ey+2,1,1,INK);R(ex+2,ey+2,1,1,INK)}
-    else{R(ex,ey,2,eh,'#fff');R(ex+3,ey,2,eh,'#fff');R(ex+(face>0?1:0),ey+1,1,eh-1,INK);R(ex+3+(face>0?1:0),ey+1,1,eh-1,INK)}
-  }
-  if(k==='sprout'){const sx=x+(w>>1)-1;R(sx,y,2,4,'#2f7a3a');R(sx+2,y,4,2,'#5fd068');R(sx+2,y,4,1,'#9df0a0')}
-  if(k==='fox')R(face>0?x+w-1:x,y+(big?8:7),1,1,INK);
-  if(k==='cat'){R(face>0?x+w:x-2,y+(big?9:8),2,1,'#fff4dc');R(face>0?x+w:x-2,y+(big?11:10),2,1,'#fff4dc')}
+  let CC=C;if(o.fire)CC={...C,dark:'#ff6a1a',belly:'#ffe9c0'};else if(o.ice)CC={...C,dark:'#3d9be0',belly:'#e6f6ff'};
+  drawHeroSprite(x,y,w,h,CC,pc,face,step,!!o.dead,false);
   if(o.carry){R(face>0?x+w-2:x-1,y+h-(big?11:7),3,3,INK);R(face>0?x+w-1:x,y+h-(big?10:6),1,1,C.body)}
   if(o.wall){const hx=face>0?x-2:x+w;R(hx,y+(big?8:6),2,3,INK)}
   if(o.pound){R(x+1,y-7,1,4,'#fff4dc');R(x+w-2,y-7,1,4,'#fff4dc');R(x+(w>>1),y-10,1,6,'#fff4dc')}
-  if(o.fire){R(x+1,y+(big?4:3),w-2,1,'#ff6a1a');R(x+1,y+(big?5:4),w-2,1,'#ffb347')}
-  if(o.ice){R(x+1,y+(big?4:3),w-2,1,'#3d9be0');R(x+1,y+(big?5:4),w-2,1,'#cdeeff')}
+  if(o.fire&&(frame>>3)%2)R(face>0?x+w-3:x+1,y+(big?2:1),2,2,'#ffb347');
+  if(o.ice&&(frame>>3)%2)R(face>0?x+w-3:x+1,y+(big?2:1),2,2,'#cdeeff');
   if(o.feather){const wx=face>0?x-4:x+w,fl=o.glide?((frame>>2)%2):0;R(wx,y+h-13-fl,4,7,INK);R(wx+(face>0?1:0),y+h-12-fl,3,5,'#ffffff');R(wx+(face>0?1:0),y+h-8-fl,3,1,'#c8d8ea')}
   /* Hut sitzt 2 Pixel unter Ohren/Blatt/Augen; beim Frosch liegen die Augen vor dem Hut */
-  if(o.hat){drawHat(o.hat,x+w/2,y,face,k);if(k==='frog')frogEyes(x,y,w,face,o.dead)}
-}
-function frogEyes(x,y,w,face,dead){
-  R(x,y-2,5,5,INK);R(x+w-5,y-2,5,5,INK);R(x+1,y-1,3,3,'#fff');R(x+w-4,y-1,3,3,'#fff');
-  const d=face>0?2:0;
-  if(dead){R(x+2,y,1,1,INK);R(x+w-3,y,1,1,INK)}else{R(x+1+d,y,1,2,INK);R(x+w-4+d,y,1,2,INK)}
+  if(o.hat){drawHat(o.hat,x+w/2,y,face,k);if(k==='frog')drawHeroSprite(x,y,w,h,CC,pc,face,step,!!o.dead,true)}
 }
 const RAINBOW=['#ff5a6e','#ffb347','#ffe066','#5fd068','#3d86f0','#b58ae6'];
 function drawPreview(canvas,ch,pid,hat){
@@ -1995,7 +2160,7 @@ function drawPlayers(cx){
     if(p.star>0&&frame%4===0)L.fx.push({k:'deb',x:p.x+Math.random()*p.w,y:p.y+Math.random()*p.h,vx:0,vy:-.5,t:12,c:RAINBOW[(frame>>2)%6]});
     if(game.players.length>1&&!p.dead&&settings.names){
       ctx.font='8px '+FONT;ctx.textAlign='center';ctx.textBaseline='bottom';const lbl=(p.name||'P'+(p.id+1)).slice(0,8)+((net.mode==='client'&&p.id===net.mySlot)?' ▼':'');
-      const ly=y-(CHARS[p.ch|0].kind==='frog'?5:3);
+      const ly=y-(CHARS[p.ch|0].kind==='frog'?5:3)-(p.hat?8:0);
       ctx.fillStyle=INK;ctx.fillText(lbl,x+(p.w>>1)+1,ly);ctx.fillStyle=COLORS[p.id].c;ctx.fillText(lbl,x+(p.w>>1),ly-1);ctx.textAlign='left'}
   }
 }
