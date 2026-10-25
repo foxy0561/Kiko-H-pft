@@ -20,7 +20,12 @@ Alle Tasten lassen sich unter **Optionen → Steuerung → Tasten belegen** änd
 
 ## Inhalt
 
-- **Weltkarte** mit 6 Leveln: Wiesenweg, Röhrenhöhle, Dämmerhain, Glitzergrotte (geheim), Wolkengipfel, Lavaburg
+- **3 Welten mit 15 Leveln**, über Röhren auf der Karte verbunden:
+  - Welt 1 Wiesenland: Wiesenweg, Röhrenhöhle, Dämmerhain, Glitzergrotte (geheim), Wolkengipfel, Lavaburg
+  - Welt 2 Sandsee: Dünenpfad, Kaktuskamm, Pyramidengruft, Geheime Oase, Sandburg
+  - Welt 3 Frostgipfel: Schneefeld, Eiszapfenhöhle (rutschig), Polarlicht, Frostburg
+- **Ziel:** alle Spieler müssen an der Fahne sein, bevor es weitergeht
+- **Team-Leben:** Leben gehören dem ganzen Team. Wer stirbt, schwebt als Blase mit; ein Leben geht erst weg, wenn alle erwischt wurden
 - **Große Münzen:** 3 pro Level – öffnen Tore zu Geheimleveln und zum Laden
 - **Laden:** Pilz, Glutbeere, Herz und Funkelstern für Münzen
 - **Power-ups:** klein → groß (Pilz) → Glut (Feuerbälle mit Shift). Treffer stufen eine Stufe ab, Power-ups bleiben über Level erhalten
