@@ -84,6 +84,16 @@ body.fs #wrap{border:0;box-shadow:none;width:min(100vw,calc(100dvh * 5 / 3))}
 .namefield{display:flex;align-items:center;gap:1.4cqw;font-family:var(--f-display);font-size:max(10px,2.6cqh);color:var(--cream);text-shadow:0 .4cqh 0 #000}
 .namefield input{width:min(32cqw,220px);font-family:var(--f-body);font-size:max(14px,3.2cqh);padding:.8cqh 1.2cqw;background:var(--field);color:var(--cream);border:max(3px,.6cqh) solid #000;outline:none;min-width:0}
 .namefield input:focus{border-color:var(--gold)}
+.opts .btn{padding:1cqh 3cqw;font-size:max(11px,3.1cqh)}
+.hub .btn{min-width:min(52cqw,360px)}
+.hub .btn small{display:block;font-family:var(--f-body);text-transform:none;letter-spacing:0;font-size:max(9px,2.3cqh);color:var(--muted);margin-top:.3cqh}
+.hub .btn:hover small,.hub .btn:focus small{color:var(--ink)}
+.keygrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:max(5px,1.2cqh) max(8px,2.4cqw);width:100%}
+.keygrid h3{margin:0;font-family:var(--f-display);font-size:max(10px,2.7cqh);color:var(--gold)}
+.keygrid .btn{min-width:0;width:100%;padding:.9cqh 1.6cqw;font-size:max(10px,2.6cqh);display:flex;justify-content:space-between;gap:1.4cqw}
+.keygrid .btn .val{color:var(--gold);text-transform:none}
+.keygrid .btn:hover .val,.keygrid .btn:focus .val{color:var(--ink)}
+.keygrid .btn.wait{background:var(--leaf)!important;color:#0b2410}
 .ctrl{display:grid;grid-template-columns:auto 1fr;gap:.9cqh 3cqw;text-align:left;font-size:max(11px,2.6cqh)}
 .ctrl dt{font-family:var(--f-display);color:var(--gold)}
 .ctrl dd{margin:0}
@@ -92,8 +102,8 @@ body.fs #wrap{border:0;box-shadow:none;width:min(100vw,calc(100dvh * 5 / 3))}
 .scores i{display:inline-block;width:2.6cqh;height:2.6cqh;border:2px solid #000}
 #touch{position:absolute;inset:auto 0 0 0;display:flex;justify-content:space-between;align-items:flex-end;padding:2cqh 2cqw;pointer-events:none}
 #touch .grp{display:flex;gap:2cqw;align-items:flex-end}
-#touch button{pointer-events:auto;width:14cqh;height:14cqh;border-radius:50%;border:3px solid rgba(0,0,0,.6);background:rgba(255,244,220,.28);color:#fff;font-size:5.5cqh;font-family:var(--f-display);touch-action:none;user-select:none;-webkit-user-select:none}
-#touch .sm{width:11cqh;height:11cqh;font-size:4cqh}
+#touch button{pointer-events:auto;width:calc(var(--ts,1)*14cqh);height:calc(var(--ts,1)*14cqh);border-radius:50%;border:3px solid rgba(0,0,0,.6);background:rgba(255,244,220,.28);color:#fff;font-size:5.5cqh;font-family:var(--f-display);touch-action:none;user-select:none;-webkit-user-select:none}
+#touch .sm{width:calc(var(--ts,1)*11cqh);height:calc(var(--ts,1)*11cqh);font-size:4cqh}
 #touch .tp{position:absolute;top:2cqh;right:2cqw;width:9cqh;height:9cqh;font-size:3.4cqh}
 @media (max-width:560px){.slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -181,6 +191,7 @@ body.fs #wrap{border:0;box-shadow:none;width:min(100vw,calc(100dvh * 5 / 3))}
       <p class="hint">Das Spiel läuft beim Host weiter.</p>
       <div class="btns">
         <button class="btn" data-act="closeNetMenu">Weiter</button>
+        <button class="btn" data-act="options">Optionen</button>
         <button class="btn" data-act="toMenu">Spiel verlassen</button>
       </div>
     </section>
@@ -193,17 +204,90 @@ body.fs #wrap{border:0;box-shadow:none;width:min(100vw,calc(100dvh * 5 / 3))}
 
     <section class="screen card" data-screen="options" hidden>
       <h2>Optionen</h2>
-      <div class="btns">
-        <button class="btn opt" data-opt="sound"><span>Sound</span><span class="val"></span></button>
-        <button class="btn opt" data-opt="volume"><span>Lautstärke</span><span class="val"></span></button>
-        <button class="btn opt" data-opt="lives"><span>Startleben</span><span class="val"></span></button>
-        <button class="btn opt" data-opt="shake"><span>Wackeln</span><span class="val"></span></button>
-        <button class="btn opt" data-opt="fs"><span>Vollbild (F)</span><span class="val"></span></button>
-        <button class="btn" data-act="resetSave" id="resetBtn">Spielstand löschen</button>
-        <button class="btn" data-act="controls">Steuerung</button>
+      <div class="btns hub">
+        <button class="btn" data-act="optAudio">Audio<small>Lautstärke, Musik, Effekte</small></button>
+        <button class="btn" data-act="optGfx">Grafik<small>Vollbild, Helligkeit, Anzeige</small></button>
+        <button class="btn" data-act="optInput">Steuerung<small>Tasten belegen, Gamepad, Touch</small></button>
+        <button class="btn" data-act="optGame">Spiel<small>Schwierigkeit, Leben, Zeit</small></button>
+        <button class="btn" data-act="optData" id="optDataBtn">Daten<small>Spielstand und Rekord</small></button>
+        <button class="btn" data-act="back">Zurück</button>
+      </div>
+    </section>
+
+    <section class="screen card" data-screen="oAudio" hidden>
+      <h2>Audio</h2>
+      <div class="btns opts">
+        <button class="btn opt" data-opt="sound"><span>Ton</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="volume"><span>Gesamt</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="sfxVol"><span>Effekte</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="music"><span>Musik</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="musVol"><span>Musik-Lautstärke</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="menuSnd"><span>Menü-Klicks</span><span class="val"></span></button>
         <button class="btn" data-act="back">Zurück</button>
       </div>
       <p class="hint">← → ändert den Wert</p>
+    </section>
+
+    <section class="screen card" data-screen="oGfx" hidden>
+      <h2>Grafik</h2>
+      <div class="btns opts">
+        <button class="btn opt" data-opt="fs"><span>Vollbild (F)</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="bright"><span>Helligkeit</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="smooth"><span>Pixel</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="shake"><span>Bildschirm wackeln</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="particles"><span>Partikel</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="names"><span>Namen über Figuren</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="fps"><span>FPS anzeigen</span><span class="val"></span></button>
+        <button class="btn" data-act="back">Zurück</button>
+      </div>
+      <p class="hint">← → ändert den Wert</p>
+    </section>
+
+    <section class="screen card" data-screen="oInput" hidden>
+      <h2>Steuerung</h2>
+      <div class="btns opts">
+        <button class="btn" data-act="optKeys">Tasten belegen</button>
+        <button class="btn opt" data-opt="autorun"><span>Immer rennen</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="vib"><span>Gamepad-Vibration</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="touch"><span>Touch-Tasten</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="touchSize"><span>Touch-Größe</span><span class="val"></span></button>
+        <button class="btn" data-act="controls">Tastenübersicht</button>
+        <button class="btn" data-act="back">Zurück</button>
+      </div>
+      <p class="hint">Immer rennen: Shift halten lässt dich langsam gehen.</p>
+    </section>
+
+    <section class="screen card" data-screen="oKeys" hidden>
+      <h2>Tasten belegen</h2>
+      <div class="keygrid" id="keyGrid"></div>
+      <div class="btns row">
+        <button class="btn" data-act="keysReset">Standard</button>
+        <button class="btn" data-act="back">Zurück</button>
+      </div>
+      <p class="hint" id="keyHint">Auswählen, dann neue Taste drücken · Esc bricht ab</p>
+    </section>
+
+    <section class="screen card" data-screen="oGame" hidden>
+      <h2>Spiel</h2>
+      <div class="btns opts">
+        <button class="btn opt" data-opt="diff"><span>Schwierigkeit</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="lives"><span>Startleben</span><span class="val"></span></button>
+        <button class="btn opt" data-opt="timer"><span>Zeitlimit</span><span class="val"></span></button>
+        <button class="btn" data-act="back">Zurück</button>
+      </div>
+      <p class="hint" id="diffHint"></p>
+      <p class="hint">Online gelten die Spiel-Einstellungen des Hosts.</p>
+    </section>
+
+    <section class="screen card" data-screen="oData" hidden>
+      <h2>Daten</h2>
+      <div class="btns opts">
+        <button class="btn" data-act="resetSave" id="resetBtn">Spielstand löschen</button>
+        <button class="btn" data-act="resetBest" id="resetBestBtn">Rekord löschen</button>
+        <button class="btn" data-act="resetSettings" id="resetSetBtn">Einstellungen zurücksetzen</button>
+        <button class="btn" data-act="back">Zurück</button>
+      </div>
+      <p class="hint">Zum Löschen zweimal drücken.</p>
     </section>
 
     <section class="screen card" data-screen="controls" hidden>
@@ -238,7 +322,7 @@ body.fs #wrap{border:0;box-shadow:none;width:min(100vw,calc(100dvh * 5 / 3))}
         <button class="btn" data-act="resume">Weiter</button>
         <button class="btn" data-act="restartLevel" id="restartBtn">Level neu starten</button>
         <button class="btn" data-act="pauseMap" id="pauseMapBtn">Zur Karte</button>
-        <button class="btn" data-act="fs">Vollbild an/aus (F)</button>
+        <button class="btn" data-act="options">Optionen</button>
         <button class="btn" data-act="toMenu" id="pauseQuit">Hauptmenü</button>
       </div>
     </section>
@@ -294,7 +378,7 @@ const CHARS=[
   {name:'Pim',desc:'Katze',kind:'cat',body:'#7d8bdc',dark:'#4a55a0',belly:'#f1eeff'}
 ];
 /* Version: Online spielen nur Spieler mit gleicher Version zusammen */
-const GAME_VERSION=12;
+const GAME_VERSION=13;
 const PAGES_URL='https://foxy0561.github.io/Kiko-H-pft/';
 /* Spielername (wird lokal gespeichert, online an die anderen geschickt) */
 const cleanName=s=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g,'').trim().slice(0,12);
@@ -303,22 +387,28 @@ let myName='';try{myName=cleanName(localStorage.getItem('kiko-name'))}catch(e){}
 if(!myName)myName='Spieler'+(10+Math.floor(Math.random()*90));
 
 /* ---------- Einstellungen ---------- */
-const settings={sound:true,volume:6,lives:5,shake:true};
+const DEFAULTS={sound:true,volume:6,sfxVol:10,music:true,musVol:5,menuSnd:true,
+  lives:5,diff:1,timer:true,
+  shake:true,particles:true,names:true,fps:false,smooth:false,bright:10,
+  autorun:false,vib:true,touch:0,touchSize:1,kb:{}};
+const settings=JSON.parse(JSON.stringify(DEFAULTS));
 try{Object.assign(settings,JSON.parse(localStorage.getItem('kiko-settings')||'{}'))}catch(e){}
+if(!settings.kb||typeof settings.kb!=='object')settings.kb={};
+const DIFF_SPD=[.7,1,1.35],DIFF_TIME=[400,300,200];
 const saveSettings=()=>{try{localStorage.setItem('kiko-settings',JSON.stringify(settings))}catch(e){}};
 let best=0;try{best=+localStorage.getItem('kiko-best')||0}catch(e){}
 
 /* ---------- Sound ---------- */
 let actx=null;
 function beep(f,d,type='square',slide=0,vol=1){
-  if(!settings.sound||settings.volume<=0)return;
+  if(!settings.sound||settings.volume<=0||settings.sfxVol<=0)return;
   try{
     if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();
     if(actx.state==='suspended')actx.resume();
     const t=actx.currentTime,o=actx.createOscillator(),g=actx.createGain();
     o.type=type;o.frequency.setValueAtTime(f,t);
     if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(40,f+slide),t+d);
-    g.gain.setValueAtTime(0.012*settings.volume*vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    g.gain.setValueAtTime(0.012*settings.volume*(settings.sfxVol/10)*vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
     o.connect(g).connect(actx.destination);o.start(t);o.stop(t+d+0.02);
   }catch(e){}
 }
@@ -328,9 +418,58 @@ const sfx={
   stomp:()=>beep(220,.12,'square',-140), kick:()=>beep(520,.08,'square',-200), hurt:()=>beep(420,.45,'sawtooth',-330,.8),
   shrink:()=>seq([660,520,390,260],.08,60), power:()=>seq([392,523,659,784,1047],.08,60),
   brk:()=>beep(140,.16,'triangle',-70,1.4), bump:()=>beep(160,.06,'square',0,.7),
-  win:()=>seq([523,659,784,1047,784,1047,1319],.14,120), sel:()=>beep(660,.04,'square',0,.5),
+  win:()=>seq([523,659,784,1047,784,1047,1319],.14,120), sel:()=>{if(settings.menuSnd)beep(660,.04,'square',0,.5)},
   join:()=>beep(440,.12,'square',440), fire:()=>beep(800,.07,'square',-500,.7), pipe:()=>seq([520,390,260],.07,70), big:()=>seq([784,988,1175,1568],.08,60), star:()=>seq([523,659,784,1047,1319,1568],.06,50), buy:()=>seq([660,990],.08,70), spin:()=>beep(620,.12,'square',420,.6), bubble:()=>beep(300,.3,'sine',500,1.2), pop:()=>{beep(900,.06,'square',300,.8);setTimeout(()=>beep(1200,.1,'square',200,.8),50)}, pound:()=>{beep(110,.28,'square',-60,1.6);setTimeout(()=>beep(70,.2,'triangle',-30,1.6),40)}, up:()=>seq([660,880,1320],.09,80), over:()=>seq([392,330,262,196],.22,200)
 };
+
+/* ---------- Musik (eigene kleine Chiptune-Melodien) ---------- */
+const TRACKS={
+  menu:{bpm:132,lead:'E5 - G5 - A5 - G5 E5 D5 - E5 - C5 - . . E5 - G5 - A5 - C6 - B5 A5 G5 - A5 - . .',
+               bass:'C3 . G3 . C3 . G3 . A2 . E3 . A2 . E3 . F2 . C3 . F2 . C3 . G2 . D3 . G2 . B2 .'},
+  map:{bpm:112,lead:'G4 - C5 - E5 - D5 C5 A4 - C5 - G4 - . . F4 - A4 - C5 - B4 A4 G4 - E4 - D4 - . .',
+              bass:'C3 . E3 . G3 . E3 . A2 . C3 . E3 . C3 . F2 . A2 . C3 . A2 . G2 . B2 . D3 . B2 .'},
+  t0:{bpm:150,lead:'C5 . E5 G5 . E5 C5 . D5 . F5 A5 . F5 D5 . E5 . G5 C6 . G5 E5 . D5 E5 F5 . E5 D5 C5 .',
+             bass:'C3 . C3 . G2 . G2 . D3 . D3 . A2 . A2 . E3 . E3 . C3 . C3 . G2 . G2 . B2 . B2 .'},
+  t1:{bpm:116,lead:'A4 - C5 - E5 - . D5 C5 - B4 - G4 - . . A4 - C5 - D5 - E5 F5 E5 - D5 - C5 - B4 .',
+             bass:'A2 . E3 . A2 . E3 . G2 . D3 . G2 . D3 . F2 . C3 . F2 . C3 . E2 . B2 . E2 . G#2 .'},
+  t2:{bpm:140,lead:'G5 - E5 - C5 - E5 G5 A5 - G5 - E5 - . . F5 - D5 - B4 - D5 F5 G5 - F5 - D5 - . .',
+             bass:'C3 G3 C4 G3 C3 G3 C4 G3 A2 E3 A3 E3 A2 E3 A3 E3 F2 C3 F3 C3 F2 C3 F3 C3 G2 D3 G3 D3 G2 D3 G3 D3'},
+  t3:{bpm:100,lead:'E4 . G4 . A4 . . . G4 . E4 . D4 . . . E4 . G4 . B4 . A4 . G4 . E4 . . . . .',
+             bass:'E2 . . . E2 . . . C2 . . . C2 . . . D2 . . . D2 . . . B1 . . . B1 . . .'},
+  t4:{bpm:144,lead:'D5 D5 . D5 F5 . D5 . C5 C5 . C5 E5 . C5 . A#4 A#4 . A#4 D5 . A#4 . A4 . C#5 . E5 . A5 .',
+             bass:'D2 D3 D2 D3 D2 D3 D2 D3 C2 C3 C2 C3 C2 C3 C2 C3 A#1 A#2 A#1 A#2 A#1 A#2 A#1 A#2 A1 A2 A1 A2 A1 A2 A1 A2'}
+};
+const NOTE_I={C:0,'C#':1,D:2,'D#':3,E:4,F:5,'F#':6,G:7,'G#':8,A:9,'A#':10,B:11};
+const noteF=n=>{const m=/^([A-G]#?)(\d)$/.exec(n);return m?440*Math.pow(2,(NOTE_I[m[1]]+(+m[2]+1)*12-69)/12):0};
+for(const k in TRACKS){const tr=TRACKS[k];for(const v of['lead','bass'])tr[v]=tr[v].trim().split(/\s+/)}
+const mus={cur:null,step:0,next:0,want:null};
+function ensureAudio(){try{if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume()}catch(e){}}
+addEventListener('pointerdown',ensureAudio,{passive:true});addEventListener('keydown',ensureAudio);
+function musNote(f,t,d,type,v){
+  if(!f)return;const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(v,t+.01);g.gain.setValueAtTime(v,t+d*.75);g.gain.linearRampToValueAtTime(0.0001,t+d*.98);
+  o.connect(g).connect(actx.destination);o.start(t);o.stop(t+d);
+}
+/* plant ein paar Noten im Voraus; wird jeden Frame aufgerufen */
+function musicTick(){
+  let want=null;
+  if(state==='menu'||state==='quit')want='menu';
+  else if(state==='map'||state==='shop'||(state==='pause'&&pausedFrom==='map'))want='map';
+  else if(state==='play'||state==='intro'||state==='pause'||state==='clear')want=L&&L.theme?'t'+Math.max(0,THEMES.indexOf(L.theme)):null;
+  if(!settings.sound||!settings.music||settings.musVol<=0||settings.volume<=0)want=null;
+  if(!actx||actx.state!=='running'){mus.cur=null;return}
+  if(want!==mus.cur){mus.cur=want;mus.step=0;mus.next=actx.currentTime+.08}
+  if(!want)return;
+  const tr=TRACKS[want],dt=60/tr.bpm/2,base=0.001*settings.volume*settings.musVol*(state==='pause'?.45:1);
+  if(mus.next<actx.currentTime-.3)mus.next=actx.currentTime+.05;
+  while(mus.next<actx.currentTime+.15){
+    for(const[v,type,amp]of[['lead','square',.55],['bass','triangle',1.6]]){
+      const seq=tr[v],i=mus.step%seq.length,n=seq[i];
+      if(n!=='.'&&n!=='-'){let len=1;while(seq[(i+len)%seq.length]==='-'&&len<seq.length)len++;musNote(noteF(n),mus.next,dt*len,type,base*amp)}
+    }
+    mus.step++;mus.next+=dt;
+  }
+}
 
 /* ---------- Eingabe ---------- */
 const keys={};
@@ -338,6 +477,9 @@ const KB={
   k1:{left:['KeyA'],right:['KeyD'],jump:['KeyW','Space'],down:['KeyS'],act:['ControlLeft'],run:['ShiftLeft']},
   k2:{left:['ArrowLeft'],right:['ArrowRight'],jump:['ArrowUp'],down:['ArrowDown'],act:['ControlRight','Numpad0'],run:['ShiftRight']}
 };
+const KB_DEF=JSON.parse(JSON.stringify(KB));
+function applyKb(){for(const set of['k1','k2']){const c=settings.kb[set]||{};for(const a in KB_DEF[set])KB[set][a]=Array.isArray(c[a])&&c[a].length?c[a].slice():KB_DEF[set][a].slice()}}
+applyKb();
 const touch={left:false,right:false,jump:false,down:false,act:false,run:false};
 const pads=()=>{try{return navigator.getGamepads?[...navigator.getGamepads()]:[]}catch(e){return[]}};
 const pb=(gp,i)=>!!(gp.buttons[i]&&gp.buttons[i].pressed);
@@ -352,6 +494,8 @@ function readInput(dev){
   else if(KB[dev])kbRead(KB[dev],r);
   else if(dev.startsWith('pad'))padRead(+dev.slice(3),r);
   else if(dev.startsWith('net:')){const i=net.inputs[dev.slice(4)]||{};r.left=!!i.l;r.right=!!i.r;r.jump=!!i.j;r.down=!!i.d;r.act=!!i.e;r.run=!!i.u}
+  r.shift=r.run;
+  if(settings.autorun&&!dev.startsWith('net:'))r.run=!r.run;
   return r;
 }
 
@@ -637,7 +781,7 @@ function startGame(devs){
   for(const p of game.players)if(p.dev.startsWith('net:')){const r=net.remote[p.dev.slice(4)];p.evSeen=r&&r.ev.length?r.ev[r.ev.length-1][0]:0}
   state='map';show(null);
 }
-function loadLevel(){L=buildLevel(game.level);L.bigPrev=(prog.big[game.level]||[]).map(Boolean);game.time=300;game.rs++;placePlayers();state='intro';introT=110;flagY=0}
+function loadLevel(){L=buildLevel(game.level);L.bigPrev=(prog.big[game.level]||[]).map(Boolean);game.time=settings.timer?DIFF_TIME[settings.diff|0]||300:-1;game.rs++;placePlayers();state='intro';introT=110;flagY=0}
 function fillScores(kind,list){
   const el=document.getElementById(kind==='win'?'winScores':'overScores');
   el.innerHTML=list.map(p=>`<div><i style="background:${COLORS[p.id].c}"></i>${esc(p.name||('P'+(p.id+1)))} · ${CHARS[p.ch|0].name} <span>${String(p.score|0).padStart(6,'0')}</span></div>`).join('')+
@@ -664,8 +808,8 @@ function playEv(n,x,y,s){
     case'coin':sfx.coin();if(s==='pop')L.fx.push({k:'coin',x,y,vy:-4,t:28});break;
     case'stomp':sfx.stomp();break;
     case'kick':sfx.kick();break;
-    case'hurt':sfx.hurt();shake(10);break;
-    case'shrink':sfx.shrink();shake(5);break;
+    case'hurt':sfx.hurt();shake(10);rumble(.8,260);break;
+    case'shrink':sfx.shrink();shake(5);rumble(.5,160);break;
     case'power':sfx.power();break;
     case'up':sfx.up();break;
     case'win':sfx.win();break;
@@ -713,6 +857,8 @@ function moveY(o){
 }
 const overlap=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
 function shake(n){shakeT=Math.max(shakeT,n)}
+function rumble(m,ms){if(!settings.vib)return;
+  for(const gp of pads()){try{if(gp&&gp.vibrationActuator)gp.vibrationActuator.playEffect('dual-rumble',{duration:ms,strongMagnitude:m,weakMagnitude:m*.6})}catch(e){}}}
 
 function setSize(p,w,h){
   const ox=p.x,oy=p.y,ow=p.w,oh=p.h;
@@ -821,7 +967,7 @@ function updatePlayer(p){
   const C=MOVE;
   const inp=(p.local&&cur)?blank():readInput(p.dev);p.act=inp.act;p.downIn=inp.down;
   const downPress=inp.down&&!p.downHeld;p.downHeld=inp.down;if(!inp.down)p.downLatch=false;
-  const runPress=inp.run&&!p.runHeld;p.runHeld=inp.run;
+  const runPress=inp.shift&&!p.runHeld;p.runHeld=inp.shift;
   if(p.star>0&&!p.local)p.star--;
   /* in eine Röhre sinken */
   if(p.pipeT>0){p.pipeT--;p.y+=1;p.vx=0;p.vy=0;p.step=0;if(p.pipeT===0)pipeExit(p);return}
@@ -1055,10 +1201,10 @@ function updateEnemies(){
         if(e.type==='b'){
           const t=nearestPlayer(e.x,e.y);
           if(!e.awake){if(t&&Math.abs(t.x-e.x)<120&&Math.abs(t.y-e.y)<150)e.awake=true}
-          else if(t){e.vx+=Math.sign(t.x-e.x)*.04;e.vx=Math.max(-.9,Math.min(.9,e.vx));e.x+=e.vx;e.y+=((t.y-4)-e.y)*.015+Math.sin(e.anim*.7)*.5}
+          else if(t){const sp=DIFF_SPD[settings.diff|0]||1;e.vx+=Math.sign(t.x-e.x)*.04*sp;e.vx=Math.max(-.9*sp,Math.min(.9*sp,e.vx));e.x+=e.vx;e.y+=((t.y-4)-e.y)*.015+Math.sin(e.anim*.7)*.5}
           break;
         }
-        e.vy=Math.min(e.vy+.4,6);const ov=e.vx;moveX(e);if(e.hitWall)e.vx=-ov;moveY(e);
+        e.vy=Math.min(e.vy+.4,6);const ov=e.vx;e.vx=ov*(DIFF_SPD[settings.diff|0]||1);moveX(e);e.vx=e.hitWall?-ov:ov;moveY(e);
         /* an Kanten umdrehen statt runterfallen */
         if(e.onGround){const ax=e.vx>0?e.x+e.w+1:e.x-1;if(!solidAt(Math.floor(ax/T),Math.floor((e.y+e.h+2)/T)))e.vx=-e.vx}
       }
@@ -1172,7 +1318,7 @@ function tick(){
 
   if(alive.some(p=>p.x+p.w>=L.goal*T+7&&p.x<(L.goal+6)*T)){
     state='clear';clearT=200;flagY=0;
-    alive.forEach(p=>{p.score+=game.time*10;p.vx=0;dropCarry(p)});ev('win');return;
+    alive.forEach(p=>{p.score+=Math.max(0,game.time)*10;p.vx=0;dropCarry(p)});ev('win');return;
   }
 
   /* Tode auflösen */
@@ -1307,7 +1453,7 @@ function drawPlayers(cx){
     drawHero(x,y,p.w,p.h,C,game.players.length>1?COLORS[p.id].c:null,p.face,p.step|0,{dead:p.dead,carry:!!p.carry||!!p.carryP||p.carrying,wall:!!p.wall,pound:p.pound===2,fire:!!p.fire});
     if(clip)ctx.restore();
     if(p.star>0&&frame%4===0)L.fx.push({k:'deb',x:p.x+Math.random()*p.w,y:p.y+Math.random()*p.h,vx:0,vy:-.5,t:12,c:RAINBOW[(frame>>2)%6]});
-    if(game.players.length>1&&!p.dead){
+    if(game.players.length>1&&!p.dead&&settings.names){
       ctx.font='8px '+FONT;ctx.textAlign='center';ctx.textBaseline='bottom';const lbl=(p.name||'P'+(p.id+1)).slice(0,8)+((net.mode==='client'&&p.id===net.mySlot)?' ▼':'');
       const ly=y-(CHARS[p.ch|0].kind==='frog'?5:3);
       ctx.fillStyle=INK;ctx.fillText(lbl,x+(p.w>>1)+1,ly);ctx.fillStyle=COLORS[p.id].c;ctx.fillText(lbl,x+(p.w>>1),ly-1);ctx.textAlign='left'}
@@ -1370,6 +1516,7 @@ function drawItems(cx){for(const it of L.items){const x=Math.round(it.x-cx),y=Ma
 function drawBalls(cx){for(const b of L.balls){const x=Math.round(b.x-cx),y=Math.round(b.y);
   R(x+1,y,4,6,'#c8320f');R(x,y+1,6,4,'#c8320f');R(x+1,y+1,4,4,(frame>>1)%2?'#ff9a3c':'#ffd38a');}}
 function drawFx(cx){
+  if(!settings.particles)L.fx=L.fx.filter(f=>f.k==='txt'||f.k==='coin');
   ctx.font='8px '+FONT;ctx.textBaseline='top';
   for(const f of L.fx){const x=Math.round(f.x-cx),y=Math.round(f.y);
     if(f.k==='coin'){R(x,y,7,10,'#b8860b');R(x+1,y+1,5,8,'#ffd23f')}
@@ -1394,7 +1541,7 @@ function drawHUD(){
   ctx.textAlign='right';ctx.fillStyle='#ffc83d';ctx.fillText(L.name.toUpperCase(),W-4,2);
   const got=L.bigGot||[],had=L.bigPrev||[];
   if(got.length){R(W-46,21,46,11,'rgba(16,14,40,.74)');for(let i=0;i<got.length;i++)bigIcon(W-42+i*14,22,got[i]?2:had[i]?1:0)}
-  ctx.fillStyle=game.time<=60&&frame%30<15?'#ff5a6e':'#fff4dc';ctx.fillText('ZEIT '+game.time,W-4,11);ctx.textAlign='left';
+  if(game.time>=0){ctx.fillStyle=game.time<=60&&frame%30<15?'#ff5a6e':'#fff4dc';ctx.fillText('ZEIT '+game.time,W-4,11)}ctx.textAlign='left';
 }
 function drawIntro(){
   R(0,0,W,H,'#14122b');ctx.textAlign='center';ctx.textBaseline='middle';
@@ -1447,7 +1594,13 @@ function banner(a,b){
   ctx.fillStyle='#000';ctx.fillText(a,W/2+2,92);ctx.fillStyle='#ffc83d';ctx.fillText(a,W/2,90);
   if(b){ctx.font='8px '+FONT;ctx.fillStyle='#fff4dc';ctx.fillText(b,W/2,110)}ctx.textAlign='left';
 }
+let fpsN=0,fpsT=0,fpsV=0;
 function render(){
+  renderScene();
+  if(settings.fps){fpsN++;const n=performance.now();if(n-fpsT>2000){fpsT=n;fpsN=0}if(n-fpsT>=500){fpsV=Math.round(fpsN*1000/(n-fpsT));fpsN=0;fpsT=n}
+    ctx.setTransform(1,0,0,1,0,0);ctx.font='8px '+FONT;ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillStyle='#000';ctx.fillText(fpsV+' FPS',5,H-2);ctx.fillStyle='#7dff9a';ctx.fillText(fpsV+' FPS',4,H-3)}
+}
+function renderScene(){
   ctx.setTransform(1,0,0,1,0,0);
   if(state==='intro'){drawIntro();return}
   if(state==='map'||state==='shop'||(state==='pause'&&pausedFrom==='map')){drawMap();if(state==='shop'&&net.mode==='client')banner('LADEN','DER HOST KAUFT EIN');return}
@@ -1458,7 +1611,7 @@ function render(){
   drawTiles(cx);drawGoal(cx);drawChecks(cx);drawItems(cx);drawEnemies(cx);if(inGame)drawPlayers(cx);drawBalls(cx);drawFx(cx);
   ctx.setTransform(1,0,0,1,0,0);
   if(inGame)drawHUD();
-  if(state==='clear')banner('GESCHAFFT!','ZEITBONUS +'+game.time*10);
+  if(state==='clear')banner('GESCHAFFT!',game.time>=0?'ZEITBONUS +'+game.time*10:'');
   if(state==='pause'&&net.mode==='client')banner('PAUSE','DER HOST HAT PAUSIERT');
   if(L.theme.dark&&inGame){ctx.fillStyle='rgba(0,0,0,.08)';ctx.fillRect(0,21,W,H-21)}
 }
@@ -1915,7 +2068,10 @@ function show(name){
   if(cur==='lobby'&&name!=='lobby')clearTimeout(readyTimer);
   cur=name;for(const k in screens)screens[k].hidden=k!==name;ui.hidden=!name;
   ui.classList.toggle('light',name==='main'||name==='quit');
-  if(name==='options')refreshOptions();
+  if(name&&screens[name].querySelector('.opt'))refreshOptions();
+  if(name==='oKeys')renderKeys();
+  if(name==='options')document.getElementById('optDataBtn').hidden=optFrom!=='main';
+  if(cur!=='oKeys'&&bindWait)bindWait=null;
   if(name==='hostLobby')renderHostLobby();
   if(name==='lobby')renderLobby();
   if(name==='pause')document.getElementById('pauseQuit').textContent=net.mode==='host'?'Spiel schließen':'Hauptmenü';
@@ -1941,21 +2097,86 @@ function toggleFs(){
 }
 const onFs=()=>{document.body.classList.toggle('fs',isFs());if(cur==='options')refreshOptions()};
 document.addEventListener('fullscreenchange',onFs);document.addEventListener('webkitfullscreenchange',onFs);
+const bar=(v,a,b)=>'▮'.repeat(v-a)+'▯'.repeat(b-v);
+const OPT={
+  sound:['bool'],music:['bool'],menuSnd:['bool'],shake:['bool'],particles:['bool'],names:['bool'],fps:['bool'],autorun:['bool'],vib:['bool'],timer:['bool'],
+  volume:['bar',0,10],sfxVol:['bar',0,10],musVol:['bar',0,10],
+  bright:['list',[6,8,10,12,14],['60 %','80 %','100 %','120 %','140 %']],
+  smooth:['list',[false,true],['Scharf','Weich']],
+  lives:['list',[1,3,5,9]],
+  diff:['list',[0,1,2],['Leicht','Normal','Schwer']],
+  touch:['list',[0,1,2],['Automatisch','An','Aus']],
+  touchSize:['list',[0,1,2],['Klein','Mittel','Groß']]
+};
+const DIFF_TXT=['Leicht: Gegner langsamer, 400 Sekunden.','Normal: 300 Sekunden.','Schwer: Gegner schneller, nur 200 Sekunden.'];
+function optVal(o){
+  if(o==='fs')return isFs()?'An':'Aus';
+  const d=OPT[o];if(!d)return'';const v=settings[o];
+  if(d[0]==='bool')return v?'An':'Aus';
+  if(d[0]==='bar')return bar(v,d[1],d[2]);
+  const i=d[1].indexOf(v);return d[2]?d[2][Math.max(0,i)]:String(v);
+}
+function applySettings(){
+  cv.style.imageRendering=settings.smooth?'auto':'pixelated';
+  cv.style.filter=settings.bright===10?'':`brightness(${settings.bright/10})`;
+  touchEl.style.setProperty('--ts',[.8,1,1.25][settings.touchSize|0]||1);
+  applyKb();updateTouch();
+}
 function refreshOptions(){
-  const v={fs:isFs()?'An':'Aus',sound:settings.sound?'An':'Aus',volume:'▮'.repeat(settings.volume)+'▯'.repeat(10-settings.volume),lives:String(settings.lives),shake:settings.shake?'An':'Aus'};
-  screens.options.querySelectorAll('.opt').forEach(b=>b.querySelector('.val').textContent=v[b.dataset.opt]);
+  document.querySelectorAll('#ui .opt').forEach(b=>b.querySelector('.val').textContent=optVal(b.dataset.opt));
+  const dh=document.getElementById('diffHint');if(dh)dh.textContent=DIFF_TXT[settings.diff|0]||'';
 }
 function adjust(el,dir){
   const o=el&&el.dataset&&el.dataset.opt;if(!o)return;
   if(o==='fs'){toggleFs();sfx.sel();return}
-  if(o==='sound')settings.sound=!settings.sound;
-  if(o==='shake')settings.shake=!settings.shake;
-  if(o==='volume'){settings.volume+=dir;if(settings.volume>10)settings.volume=0;if(settings.volume<0)settings.volume=0}
-  if(o==='lives'){const opts=[3,5,9];let i=opts.indexOf(settings.lives);i=(i+dir+opts.length)%opts.length;settings.lives=opts[i]}
-  saveSettings();refreshOptions();sfx.sel();
+  const d=OPT[o];if(!d)return;
+  if(d[0]==='bool')settings[o]=!settings[o];
+  else if(d[0]==='bar'){let v=settings[o]+dir;if(v>d[2])v=dir>0&&settings[o]===d[2]?d[1]:d[2];if(v<d[1])v=d[1];settings[o]=v}
+  else{const l=d[1];let i=l.indexOf(settings[o]);if(i<0)i=l.indexOf(DEFAULTS[o]);settings[o]=l[(i+dir+l.length)%l.length]}
+  saveSettings();applySettings();refreshOptions();sfx.sel();
 }
+/* ---- Tasten belegen ---- */
+const ACT_NAMES={left:'Links',right:'Rechts',jump:'Springen',down:'Ducken',run:'Rennen',act:'Aufheben'};
+const keyName=c=>({Space:'Leertaste',ArrowLeft:'←',ArrowRight:'→',ArrowUp:'↑',ArrowDown:'↓',ShiftLeft:'Shift L',ShiftRight:'Shift R',ControlLeft:'Strg L',ControlRight:'Strg R',
+  AltLeft:'Alt',AltRight:'Alt Gr',Enter:'Enter',Tab:'Tab',Backspace:'Rück',CapsLock:'Feststell',Numpad0:'Num 0'}[c]||c.replace(/^Key/,'').replace(/^Digit/,'').replace(/^Numpad/,'Num '));
+let bindWait=null;
+function renderKeys(){
+  const g=document.getElementById('keyGrid');
+  let h='<h3>Tastatur links</h3><h3>Tastatur rechts</h3>';
+  for(const a of Object.keys(ACT_NAMES))for(const set of['k1','k2'])
+    h+=`<button class="btn" data-bind="${set}:${a}"><span>${ACT_NAMES[a]}</span><span class="val">${KB[set][a].map(keyName).join(' / ')}</span></button>`;
+  g.innerHTML=h;
+}
+function startBind(b){
+  if(bindWait){bindWait.b.classList.remove('wait')}
+  const[set,a]=b.dataset.bind.split(':');bindWait={set,a,b};b.classList.add('wait');b.querySelector('.val').textContent='Taste drücken …';
+  document.getElementById('keyHint').textContent=`Neue Taste für „${ACT_NAMES[a]}" (${set==='k1'?'links':'rechts'}) drücken · Esc bricht ab`;
+}
+function endBind(code){
+  const w=bindWait;bindWait=null;if(!w)return;
+  document.getElementById('keyHint').textContent='Auswählen, dann neue Taste drücken · Esc bricht ab';
+  if(code&&!['Escape','KeyF','KeyP','Enter'].includes(code)){
+    /* die Taste anderen Aktionen wegnehmen, damit nichts doppelt belegt ist */
+    const old=KB[w.set][w.a].filter(c=>c!==code);
+    for(const set of['k1','k2'])for(const a in KB[set]){
+      if(set===w.set&&a===w.a)continue;
+      if(KB[set][a].includes(code)){const rest=KB[set][a].filter(c=>c!==code);settings.kb[set]=settings.kb[set]||{};
+        /* tauschen: die andere Aktion bekommt die alte Taste */
+        settings.kb[set][a]=rest.length?rest:old.slice(0,1);if(!rest.length&&old.length)toast(`${ACT_NAMES[a]} liegt jetzt auf ${keyName(old[0])}.`)}
+    }
+    settings.kb[w.set]=settings.kb[w.set]||{};settings.kb[w.set][w.a]=[code];
+    saveSettings();applyKb();sfx.sel();
+  }else if(code==='Enter'||code==='KeyF'||code==='KeyP')toast('Diese Taste ist reserviert.');
+  renderKeys();
+  const nb=document.querySelector(`[data-bind="${w.set}:${w.a}"]`);if(nb)nb.focus();
+}
+/* zweimal drücken zum Bestätigen */
+function armed(id,label,fn){const b=document.getElementById(id);
+  if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Wirklich?';clearTimeout(b._t);b._t=setTimeout(()=>{b.dataset.armed='';b.textContent=label},3000);return}
+  clearTimeout(b._t);b.dataset.armed='';b.textContent=label;fn()}
 function back(){
-  const map={options:'main',controls:'options',mp:'main',host:'mp',join:'mp',quit:'main'};
+  if(bindWait){endBind(null);return}
+  const map={options:optFrom,oAudio:'options',oGfx:'options',oInput:'options',oGame:'options',oData:'options',oKeys:'oInput',controls:'oInput',mp:'main',host:'mp',join:'mp',quit:'main'};
   if(cur==='pause'){resume();return}
   if(cur==='netmenu'){show(null);return}
   if(cur==='lobby'){sfx.sel();show(lobby.mode==='sp'?'main':'mp');return}
@@ -1963,7 +2184,7 @@ function back(){
   if(cur==='shop'){closeShop();return}
   if(map[cur]){sfx.sel();show(map[cur])}
 }
-let pausedFrom='play';
+let pausedFrom='play',optFrom='main';
 function pause(){
   if(net.mode==='client'){if(!cur&&state!=='over'&&state!=='win')show('netmenu');return}
   if(state!=='play'&&state!=='map')return;pausedFrom=state;state='pause';show('pause');
@@ -1982,11 +2203,13 @@ const ACTS={
   closeNetMenu:()=>show(null),
   toMap,closeShop,
   pauseMap:()=>{saveProg();toMap()},
-  resetSave:()=>{const b=document.getElementById('resetBtn');
-    if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Wirklich löschen?';setTimeout(()=>{b.dataset.armed='';b.textContent='Spielstand löschen'},3000);return}
-    try{localStorage.removeItem('kiko-save-sp');localStorage.removeItem('kiko-save-mp')}catch(e){}b.dataset.armed='';b.textContent='Spielstand löschen';toast('Spielstand gelöscht.')},
+  resetSave:()=>armed('resetBtn','Spielstand löschen',()=>{try{localStorage.removeItem('kiko-save-sp');localStorage.removeItem('kiko-save-mp')}catch(e){}toast('Spielstand gelöscht.')}),
+  resetBest:()=>armed('resetBestBtn','Rekord löschen',()=>{best=0;try{localStorage.removeItem('kiko-best')}catch(e){}toast('Rekord gelöscht.')}),
+  resetSettings:()=>armed('resetSetBtn','Einstellungen zurücksetzen',()=>{for(const k in settings)delete settings[k];Object.assign(settings,JSON.parse(JSON.stringify(DEFAULTS)));saveSettings();applySettings();toast('Einstellungen zurückgesetzt.')}),
+  optAudio:()=>show('oAudio'),optGfx:()=>show('oGfx'),optInput:()=>show('oInput'),optGame:()=>show('oGame'),optData:()=>show('oData'),optKeys:()=>show('oKeys'),
+  keysReset:()=>{settings.kb={};saveSettings();applyKb();renderKeys();toast('Standardtasten wiederhergestellt.')},
   fs:toggleFs,
-  options:()=>show('options'),controls:()=>show('controls'),back,
+  options:()=>{if(cur==='main'||cur==='pause'||cur==='netmenu')optFrom=cur;show('options')},controls:()=>show('controls'),back,
   quit:()=>{state='quit';show('quit')},
   resume,restartLevel:()=>{show(null);loadLevel()},toMenu,
   again:()=>{gameOverReset();toMap()}
@@ -2011,6 +2234,7 @@ ui.addEventListener('click',e=>{
     return;
   }
   if(b.dataset.opt){adjust(b,1);return}
+  if(b.dataset.bind){sfx.sel();startBind(b);return}
   if(b.dataset.act==='pickGame'){sfx.sel();pickGame(b);return}
   if(b.dataset.act==='buy'){buy(b.dataset.k);return}
   const a=ACTS[b.dataset.act];if(a){sfx.sel();a()}
@@ -2021,6 +2245,7 @@ function moveFocus(d){const f=focusables();if(!f.length)return;let i=f.indexOf(d
 function activate(){const f=focusables(),a=document.activeElement;if(f.includes(a)&&a.tagName==='BUTTON')a.click();else if(f[0])f[0].focus()}
 
 addEventListener('keydown',e=>{
+  if(bindWait){e.preventDefault();e.stopPropagation();if(e.repeat)return;if(e.code==='Escape')endBind(null);else endBind(e.code);return}
   const typing=e.target&&e.target.tagName==='INPUT';
   if(typing){
     if(e.code==='Enter'){e.preventDefault();const a=ACTS[e.target.dataset.enter];if(a)a();else{const f=focusables().find(el=>el.tagName==='BUTTON');if(f)f.focus()}}
@@ -2068,6 +2293,7 @@ function pollPads(){
     if(cur==='hostLobby'||(cur==='wait'&&net.mySlot!==null)){
       if(hit('left'))myPickAct('left');if(hit('right'))myPickAct('right');if(hit('a')||hit('start'))myPickAct('ok');if(hit('b'))myPickAct('cancel');continue;
     }
+    if(bindWait){if(hit('b'))endBind(null);continue}
     if(cur){if(hit('up'))moveFocus(-1);if(hit('down'))moveFocus(1);if(hit('left'))adjust(document.activeElement,-1);if(hit('right'))adjust(document.activeElement,1);
       if(hit('a'))activate();if(hit('b'))back();if(hit('start')&&(cur==='pause'||cur==='netmenu'))back()}
     else if((state==='play'||state==='map'||net.mode==='client')&&hit('start'))pause();
@@ -2077,7 +2303,7 @@ function pollPads(){
 /* ---------- Touch ---------- */
 const touchEl=document.getElementById('touch');
 const coarse=matchMedia('(pointer: coarse)').matches;
-function updateTouch(){touchEl.hidden=!(coarse&&!cur&&game.players.length>0&&(net.mode||game.players.length===1))}
+function updateTouch(){const tOn=settings.touch===1||(settings.touch===0&&coarse);touchEl.hidden=!(tOn&&!cur&&game.players.length>0&&(net.mode||game.players.length===1))}
 touchEl.querySelectorAll('[data-t]').forEach(b=>{const k=b.dataset.t;
   const on=e=>{e.preventDefault();touch[k]=true},off=e=>{e.preventDefault();touch[k]=false};
   b.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(t=>b.addEventListener(t,off))});
@@ -2088,7 +2314,7 @@ let last=performance.now(),acc=0;
 function loop(t){
   acc+=Math.min(100,t-last);last=t;
   while(acc>=1000/60){tick();acc-=1000/60;if(net.mode==='host'&&net.started&&frame%(net.transport==='sb'?5:2)===0)sendSnap()}
-  pollPads();render();requestAnimationFrame(loop);
+  pollPads();render();musicTick();requestAnimationFrame(loop);
 }
 addEventListener('pagehide',()=>{try{netLeave()}catch(e){}});
 /* Update-Prüfung für heruntergeladene Dateien (nicht auf claude.ai und nicht auf der Online-Seite selbst) */
@@ -2098,6 +2324,7 @@ if(!window.claude&&!location.href.toLowerCase().startsWith(PAGES_URL.toLowerCase
   }).catch(()=>{});
 }
 document.getElementById('ver').textContent='Version '+GAME_VERSION;
+applySettings();
 show('main');
 (document.fonts?document.fonts.load('8px Silkscreen'):Promise.resolve()).catch(()=>{}).finally(()=>requestAnimationFrame(loop));
 })();

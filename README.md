@@ -16,6 +16,8 @@ Ein Jump'n'Run im Retro-Stil für den Browser – allein, zu viert an einem Ger�
 | Pause | Esc oder P | Start |
 | Vollbild | F | – |
 
+Alle Tasten lassen sich unter **Optionen → Steuerung → Tasten belegen** ändern.
+
 ## Inhalt
 
 - **Weltkarte** mit 6 Leveln: Wiesenweg, Röhrenhöhle, Dämmerhain, Glitzergrotte (geheim), Wolkengipfel, Lavaburg
@@ -24,6 +26,8 @@ Ein Jump'n'Run im Retro-Stil für den Browser – allein, zu viert an einem Ger�
 - **Power-ups:** klein → groß (Pilz) → Glut (Feuerbälle mit Shift). Treffer stufen eine Stufe ab, Power-ups bleiben über Level erhalten
 - **Röhren:** auf einer Röhre ducken führt in Bonusräume
 - **Online:** jeder hat seine eigene Kamera, Mitspieler lassen sich tragen und als Blase retten
+- **Musik:** eigene Chiptune-Melodie für Menü, Karte und jede Welt
+- **Optionen** mit eigenen Menüs: Audio (Gesamt, Effekte, Musik), Grafik (Helligkeit, Pixel scharf/weich, Partikel, Namen, FPS), Steuerung (Tasten frei belegen, Immer rennen, Gamepad-Vibration, Touch-Tasten), Spiel (Schwierigkeit, Startleben, Zeitlimit), Daten
 
 ## Online spielen
 
