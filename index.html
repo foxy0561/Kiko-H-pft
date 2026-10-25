@@ -482,7 +482,7 @@ const CHARS=[
   {name:'Pim',desc:'Katze',kind:'cat',body:'#7d8bdc',dark:'#4a55a0',belly:'#f1eeff'}
 ];
 /* Version: Online spielen nur Spieler mit gleicher Version zusammen */
-const GAME_VERSION=16;
+const GAME_VERSION=17;
 const PAGES_URL='https://foxy0561.github.io/Kiko-H-pft/';
 /* Spielername (wird lokal gespeichert, online an die anderen geschickt) */
 const cleanName=s=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g,'').trim().slice(0,12);
@@ -1173,7 +1173,7 @@ const saveLook=()=>{try{localStorage.setItem('kiko-look',JSON.stringify(look))}c
 const cleanHat=h=>Math.max(0,Math.min(HATS.length-1,h|0));
 /* Hut auf den Kopf zeichnen: cx = Kopfmitte, y = Oberkante der Figur */
 function drawHat(i,cx,y,face,kind){
-  cx=Math.round(cx);if(kind==='frog')y-=2;const O=INK,f=face>0?1:-1;
+  cx=Math.round(cx);if(kind!=='frog')y+=2;const O=INK,f=face>0?1:-1;
   switch(i){
     case 1:R(cx-6,y-3,12,5,O);R(cx-5,y-2,10,3,'#ef4a3c');R(cx-3,y-2,3,1,'#ff8a7a');R(f>0?cx+3:cx-9,y,6,2,O);R(f>0?cx+4:cx-8,y,4,1,'#c8320f');break;
     case 2:R(cx-6,y-3,5,4,O);R(cx+1,y-3,5,4,O);R(cx-5,y-2,3,2,'#ff7ab6');R(cx+2,y-2,3,2,'#ff7ab6');R(cx-2,y-3,4,4,O);R(cx-1,y-2,2,2,'#c83a7a');break;
@@ -1942,9 +1942,7 @@ function drawHero(x,y,w,h,C,pc,face,step,o={}){
     R(x+1,y,3,4,INK);R(x+w-4,y,3,4,INK);R(x+2,y+1,1,3,inner);R(x+w-3,y+1,1,3,inner);
   }
   if(k==='frog'){
-    R(x,y-2,5,5,INK);R(x+w-5,y-2,5,5,INK);R(x+1,y-1,3,3,'#fff');R(x+w-4,y-1,3,3,'#fff');
-    const d=face>0?2:0;
-    if(o.dead){R(x+2,y,1,1,INK);R(x+w-3,y,1,1,INK)}else{R(x+1+d,y,1,2,INK);R(x+w-4+d,y,1,2,INK)}
+    frogEyes(x,y,w,face,o.dead);
     R(x+3,y+(big?7:6),w-6,1,C.dark);
   }else{
     const ex=face>0?x+w-7:x+2,ey=y+5+(big?1:0),eh=big?4:3;
@@ -1960,7 +1958,13 @@ function drawHero(x,y,w,h,C,pc,face,step,o={}){
   if(o.fire){R(x+1,y+(big?4:3),w-2,1,'#ff6a1a');R(x+1,y+(big?5:4),w-2,1,'#ffb347')}
   if(o.ice){R(x+1,y+(big?4:3),w-2,1,'#3d9be0');R(x+1,y+(big?5:4),w-2,1,'#cdeeff')}
   if(o.feather){const wx=face>0?x-4:x+w,fl=o.glide?((frame>>2)%2):0;R(wx,y+h-13-fl,4,7,INK);R(wx+(face>0?1:0),y+h-12-fl,3,5,'#ffffff');R(wx+(face>0?1:0),y+h-8-fl,3,1,'#c8d8ea')}
-  if(o.hat)drawHat(o.hat,x+w/2,y,face,k);
+  /* Hut sitzt 2 Pixel unter Ohren/Blatt/Augen; beim Frosch liegen die Augen vor dem Hut */
+  if(o.hat){drawHat(o.hat,x+w/2,y,face,k);if(k==='frog')frogEyes(x,y,w,face,o.dead)}
+}
+function frogEyes(x,y,w,face,dead){
+  R(x,y-2,5,5,INK);R(x+w-5,y-2,5,5,INK);R(x+1,y-1,3,3,'#fff');R(x+w-4,y-1,3,3,'#fff');
+  const d=face>0?2:0;
+  if(dead){R(x+2,y,1,1,INK);R(x+w-3,y,1,1,INK)}else{R(x+1+d,y,1,2,INK);R(x+w-4+d,y,1,2,INK)}
 }
 const RAINBOW=['#ff5a6e','#ffb347','#ffe066','#5fd068','#3d86f0','#b58ae6'];
 function drawPreview(canvas,ch,pid,hat){
