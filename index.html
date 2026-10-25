@@ -489,7 +489,7 @@ const CHARS=[
   {name:'Pim',desc:'Katze',kind:'cat',body:'#7d8bdc',dark:'#4a55a0',belly:'#f1eeff'}
 ];
 /* Version: Online spielen nur Spieler mit gleicher Version zusammen */
-const GAME_VERSION=21;
+const GAME_VERSION=22;
 const PAGES_URL='https://foxy0561.github.io/Kiko-H-pft/';
 /* Spielername (wird lokal gespeichert, online an die anderen geschickt) */
 const cleanName=s=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g,'').trim().slice(0,12);
@@ -1282,7 +1282,7 @@ function bump(p,tx,ty,force){
   if(ck&&ck!=='coin'&&(c==='?'||c==='I'||c==='B')){
     /* Block mit eingebautem Inhalt (aus dem Editor): Item oder Gegner kommt heraus */
     delete L.content[tx+','+ty];setTile(tx,ty,'u');
-    if(ck.startsWith('e:')){const e=mkEnemy({t:ck[2],tx,ty:ty-1,e:null,armed:false},L.nextId++);e.y=ty*T-e.h;e.vy=-3;L.enemies.push(e);ev('bmp',tx,ty)}
+    if(ck.startsWith('e:')){const e=mkEnemy({t:ck[2],tx,ty:ty-1,e:null,armed:false},L.nextId++);e.y=ty*T;e.vy=0;e.rise=e.h;e.clipY=ty*T;e.spawnT=e.h+45;L.enemies.push(e);ev('bmp',tx,ty)}
     else{L.items.push({kind:ck,x:tx*T+2,y:ty*T,w:12,h:12,vx:0,vy:0,rise:14});ev('bmp',tx,ty)}
   }
   else if(c==='?'||c==='I'){if(ck)delete L.content[tx+','+ty];setTile(tx,ty,'u');if(p){p.coins++;p.score+=100;gotCoin(p)}ev('coin',tx*T+4,ty*T-8,'pop');ev('bmpq',tx,ty)}
@@ -1292,7 +1292,7 @@ function bump(p,tx,ty,force){
   else if(!force)ev('thud');
   if(!SOLID.has(c))return;
   for(const e of L.enemies){
-    if((e.st==='walk'||e.st==='shell')&&Math.abs(e.y+e.h-ty*T)<3&&e.x+e.w>tx*T&&e.x<tx*T+T)bumpEnemy(e,p);
+    if((e.st==='walk'||e.st==='shell')&&!(e.spawnT>0)&&Math.abs(e.y+e.h-ty*T)<3&&e.x+e.w>tx*T&&e.x<tx*T+T)bumpEnemy(e,p);
   }
 }
 /* Leben gehören dem ganzen Team: alle Spieler haben immer dieselbe Zahl */
@@ -1306,6 +1306,7 @@ function bumpEnemy(e,p){
   else killEnemy(e,p);
 }
 function killEnemy(e,p,pts=200){
+  if(e.spawnT>0)return;
   if(e.type==='k'){bossHit(e,p);return}
   if(e.st!=='fall'&&p)statAdd(p,'e');
   if(e.carrier){e.carrier.carry=null;e.carrier=null}
@@ -1697,6 +1698,8 @@ function updateEnemies(){
   spawnEnemies();
   for(const e of L.enemies){
     e.anim+=.15;
+    if(e.spawnT>0)e.spawnT--;
+    if(e.rise>0){e.y-=1;e.rise--;continue}
     const near=inViews(e.x,64);
     if(!near&&e.type!=='k'&&(e.st==='walk'||e.st==='shell'||e.st==='squash'||e.st==='frozen')){
       if(!inViews(e.x,W*.75)||e.st==='squash')e.remove=true;
@@ -1784,6 +1787,7 @@ function remoteHit(p,t,id,dir){
   else if(t==='ht'){if((e.st==='walk'&&!(e.type==='k'&&e.inv>0))||(e.st==='slide'&&!(e.kicker===p&&e.grace>0)))hurt(p)}
 }
 function playerVsEnemy(p,e){
+  if(e.spawnT>0)return;
   if(p.star>0){if(e.st!=='fall')killEnemy(e,p);return}
   if(p.pound===2){poundHit(p,e);return}
   if(p.pound===1)return;
@@ -2220,6 +2224,8 @@ function drawEnemies(cx){
     const shaking=e.shake??((e.st==='shell'||e.st==='carry')&&e.timer>WAKE-90);
     if(shaking)x+=((frame>>1)%2)?1:-1;
     ctx.save();
+    if(e.rise>0&&e.clipY!==undefined){ctx.beginPath();ctx.rect(-50,-50,W+100,e.clipY+50);ctx.clip()}
+    if(e.spawnT>0&&!(e.rise>0)&&(frame>>2)%2)ctx.globalAlpha=.55;
     if(e.st==='fall'){ctx.translate(0,y*2+12);ctx.scale(1,-1)}
     if(e.type==='e'){if(e.st==='walk'||(e.st==='fall'&&e.wasWalk))drawBeetle(x,y,e);else drawShell(x,y,e)}
     else if(e.type==='m')drawMoss(x,y,e);
@@ -3156,7 +3162,7 @@ const ITEM_NAMES={pilz:'Pilz',glut:'Glutbeere',eis:'Eisblume',feder:'Feder',mini
 const EN_NAMES={m:'Moosling',e:'Käfer',h:'Igel',b:'Fledermaus',w:'Werfer',p:'Schnappblume',k:'Endboss'};
 const ED_PAGES=[
   {n:'Blöcke',tools:[{k:'#',n:'Boden'},{k:'B',n:'Ziegel'},{k:'?',n:'Sternblock'},{k:'I',n:'Unsichtbarer Block'},{k:'=',n:'Stein'},{k:'u',n:'Leerer Block'},
-    {k:'P',n:'Pilzblock'},{k:'S',n:'Funkelstern-Block'},{k:'H',n:'Herzblock'},{k:'M',n:'Mini-Block'},{k:'c',n:'Münze'},{k:'O',n:'Große Münze'},{k:'L',n:'Lava'},{k:'G',n:'Boss-Tor'},{k:'pipe',n:'Röhre'}]},
+    {k:'c',n:'Münze'},{k:'O',n:'Große Münze'},{k:'L',n:'Lava'},{k:'G',n:'Boss-Tor'},{k:'pipe',n:'Röhre'}]},
   {n:'Gegner',tools:[{k:'em',n:'Moosling'},{k:'ee',n:'Käfer'},{k:'eh',n:'Igel'},{k:'eb',n:'Fledermaus'},{k:'ew',n:'Werfer'},{k:'ep',n:'Schnappblume'},
     {k:'ek',v:'fire',n:'Glutkönig'},{k:'ek',v:'sand',n:'Sandkoloss'},{k:'ek',v:'ice',n:'Frostriese'}]},
   {n:'Items',tools:[{k:'it:coin',n:'Münze'},...ITEM_KINDS.map(q=>({k:'it:'+q,n:ITEM_NAMES[q]}))]},
