@@ -272,7 +272,7 @@ const CHARS=[
   {name:'Pim',desc:'Katze',kind:'cat',body:'#7d8bdc',dark:'#4a55a0',belly:'#f1eeff'}
 ];
 /* Version: Online spielen nur Spieler mit gleicher Version zusammen */
-const GAME_VERSION=10;
+const GAME_VERSION=11;
 const PAGES_URL='https://foxy0561.github.io/Kiko-H-pft/';
 /* Spielername (wird lokal gespeichert, online an die anderen geschickt) */
 const cleanName=s=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g,'').trim().slice(0,12);
@@ -1181,44 +1181,47 @@ const FAST=new Set(['snap','inp','me']);let sbClient=null;
 /* bildet dieselbe Schnittstelle wie der claude.ai-Raum nach: presence/peers/onPeers/join/leave.
    Häufige Daten (Spielstand, Tasten) gehen als Broadcast, der Rest als Presence. */
 function sbChannelRoom(name,myId){
-  const peers=new Map(),hs=new Set(),errs=new Set();
-  let meta={},myFast={},ch=null,trackT=null,lastTrack=0,pend=false,dead=false,snap=[];
+  /* Anwesenheit (presence) wird nur EINMAL gesetzt – Supabase begrenzt das stark.
+     Alles Veränderliche geht als Broadcast: 'm' = Status (alle 2 s erneut), 'f' = schnelle Daten. */
+  const present=new Set(),metaOf=new Map(),fastOf=new Map(),hs=new Set(),errs=new Set();
+  let meta={},myFast={},ch=null,pend=false,dead=false,snap=[],metaT=null,lastMeta=0,beat=null;
   const fire=()=>{if(pend)return;pend=true;setTimeout(()=>{pend=false;if(dead)return;const c={peers:snap,joined:[],left:[],updated:[]};hs.forEach(h=>{try{h(c)}catch(e){console.error(e)}})},0)};
   const rebuild=()=>{const arr=[];
-    for(const[id,v]of peers)arr.push(Object.freeze({peer:id,by:null,isMe:false,sameTab:false,kind:'viewer',guest:false,presence:Object.freeze({...v.meta,...v.fast}),updatedAt:Date.now()}));
+    for(const id of present){if(id===myId)continue;arr.push(Object.freeze({peer:id,by:null,isMe:false,sameTab:false,kind:'viewer',guest:false,presence:Object.freeze({...(metaOf.get(id)||{}),...(fastOf.get(id)||{})}),updatedAt:Date.now()}))}
     arr.push(Object.freeze({peer:myId,by:null,isMe:true,sameTab:true,kind:'viewer',guest:false,presence:Object.freeze({...meta,...myFast}),updatedAt:Date.now()}));
     snap=Object.freeze(arr);fire()};
-  const doTrack=()=>{trackT=null;lastTrack=Date.now();if(ch&&!dead)Promise.resolve(ch.track({m:meta})).catch(()=>{})};
-  const scheduleTrack=()=>{if(trackT)return;trackT=setTimeout(doTrack,Math.max(0,200-(Date.now()-lastTrack)))};
+  const sendMeta=()=>{metaT=null;lastMeta=Date.now();if(ch&&!dead)Promise.resolve(ch.send({type:'broadcast',event:'m',payload:{id:myId,m:meta}})).catch(()=>{})};
+  const scheduleMeta=()=>{if(metaT)return;metaT=setTimeout(sendMeta,Math.max(0,250-(Date.now()-lastMeta)))};
   const api={name,
     peers:()=>snap,
     onPeers(h,onErr){hs.add(h);if(onErr)errs.add(onErr);setTimeout(()=>{if(!dead&&hs.has(h))try{h({peers:snap,joined:snap,left:[],updated:[]})}catch(e){console.error(e)}},0);return()=>{hs.delete(h);if(onErr)errs.delete(onErr)}},
     presence(patch){const fast={};let mc=false;
       for(const k in patch){const v=patch[k];if(FAST.has(k)){fast[k]=v;if(v===null)delete myFast[k];else myFast[k]=v}else{mc=true;if(v===null)delete meta[k];else meta[k]=v}}
       if(Object.keys(fast).length&&ch&&!dead)Promise.resolve(ch.send({type:'broadcast',event:'f',payload:{id:myId,p:fast}})).catch(()=>{});
-      if(mc)scheduleTrack();rebuild();return Promise.resolve()},
+      if(mc)scheduleMeta();rebuild();return Promise.resolve()},
     connected:()=>!dead,
-    async leave(){if(dead)return;dead=true;clearTimeout(trackT);try{await ch.untrack()}catch(e){}try{sbClient.removeChannel(ch)}catch(e){}},
+    async leave(){if(dead)return;dead=true;clearTimeout(metaT);clearInterval(beat);try{await ch.untrack()}catch(e){}try{sbClient.removeChannel(ch)}catch(e){}},
     _start(){return new Promise((res,rej)=>{
       ch=sbClient.channel(name,{config:{presence:{key:myId},broadcast:{self:false}}});
-      ch.on('presence',{event:'sync'},()=>{const st=ch.presenceState(),seen=new Set();
-        for(const id in st){if(id===myId)continue;const arr=st[id]||[],m=(arr[arr.length-1]||{}).m,v=peers.get(id)||{meta:{},fast:{}};
-          v.meta=(m&&typeof m==='object')?m:{};peers.set(id,v);seen.add(id)}
-        for(const id of[...peers.keys()])if(!seen.has(id))peers.delete(id);rebuild()});
+      ch.on('presence',{event:'sync'},()=>{const st=ch.presenceState(),seen=new Set();let fresh=false;
+        for(const id in st){if(id===myId)continue;seen.add(id);if(!present.has(id)){present.add(id);fresh=true}}
+        for(const id of[...present])if(!seen.has(id)){present.delete(id);metaOf.delete(id);fastOf.delete(id)}
+        if(fresh)scheduleMeta();rebuild()});
+      ch.on('broadcast',{event:'m'},msg=>{const pl=msg&&msg.payload;if(!pl||typeof pl.id!=='string'||pl.id===myId||!pl.m||typeof pl.m!=='object')return;
+        metaOf.set(pl.id,pl.m);if(present.has(pl.id))rebuild()});
       ch.on('broadcast',{event:'f'},msg=>{const pl=msg&&msg.payload;if(!pl||typeof pl.id!=='string'||pl.id===myId||!pl.p||typeof pl.p!=='object')return;
-        const v=peers.get(pl.id);if(!v)return;for(const k in pl.p){if(!FAST.has(k))continue;if(pl.p[k]===null)delete v.fast[k];else v.fast[k]=pl.p[k]}rebuild()});
+        const v=fastOf.get(pl.id)||{};for(const k in pl.p){if(!FAST.has(k))continue;if(pl.p[k]===null)delete v[k];else v[k]=pl.p[k]}fastOf.set(pl.id,v);if(present.has(pl.id))rebuild()});
       let done=false;
       ch.subscribe(status=>{
-        if(status==='SUBSCRIBED'){if(!done){done=true;doTrack();rebuild();res(api)}}
+        if(status==='SUBSCRIBED'){if(!done){done=true;Promise.resolve(ch.track({j:1})).catch(()=>{});sendMeta();beat=setInterval(sendMeta,2000);rebuild();res(api)}}
         else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
           if(!done){done=true;rej({code:'upstream_error'})}
-          else if(!dead){dead=true;errs.forEach(f=>{try{f({code:'upstream_error',message:String(status)})}catch(e){}})}}});
-      setTimeout(()=>{if(!done){done=true;rej({code:'upstream_error'})}},10000);
+          else if(!dead){dead=true;clearInterval(beat);errs.forEach(f=>{try{f({code:'upstream_error',message:String(status)})}catch(e){}})}}});
+      setTimeout(()=>{if(!done){done=true;rej({code:'upstream_error'})}},12000);
     })}
   };
   return api;
 }
-function loadScript(src){return new Promise((res,rej)=>{const el=document.createElement('script');el.src=src;el.onload=res;el.onerror=rej;document.head.appendChild(el);setTimeout(rej,8000)})}
 async function getRoom(){
   if(net.room)return net.room;
   net.roomErr='';
@@ -1400,13 +1403,17 @@ async function joinGame(pw){
   game.players=[];
   net.gr.presence({want:{pw:pw?hash(pick.code+':'+pw):'',n:myName},inp:{}}).catch(()=>{});
   net.unsubs.push(net.gr.onPeers(onClientPeers,()=>lostConnection('Die Verbindung wurde getrennt.')));
-  setTimeout(()=>{if(net.mode==='client'&&!net.seenHost)lostConnection('Der Host antwortet nicht.')},10000);
+  setTimeout(()=>{if(net.mode==='client'&&!net.seenHost)lostConnection('Der Host antwortet nicht. Ist sein Tab noch offen und sichtbar?')},15000);
 }
 const DENY={pw:'Falsches Passwort.',full:'Das Spiel ist voll.',running:'Das Spiel läuft schon.'};
 function onClientPeers(){
   if(net.mode!=='client')return;
   const ps=net.gr.peers(),me=ps.find(p=>p.sameTab),host=ps.find(p=>p.peer===net.hostPeer);
-  if(!host){if(net.seenHost)lostConnection('Der Host hat das Spiel geschlossen.');return}
+  if(!host){
+    if(net.seenHost&&!net.hostGoneT)net.hostGoneT=setTimeout(()=>{net.hostGoneT=null;if(net.mode==='client'&&!net.gr.peers().some(p=>p.peer===net.hostPeer))lostConnection('Der Host hat das Spiel geschlossen oder die Verbindung verloren.')},6000);
+    return;
+  }
+  if(net.hostGoneT){clearTimeout(net.hostGoneT);net.hostGoneT=null}
   net.seenHost=true;const pr=host.presence||{},myPeer=me&&me.peer;
   if(myPeer&&pr.deny&&pr.deny[myPeer]){document.getElementById('wText').textContent=DENY[pr.deny[myPeer]]||'Beitritt abgelehnt.';return}
   if(myPeer&&pr.acc&&pr.acc[myPeer]!==undefined&&net.mySlot===null){
@@ -1497,7 +1504,7 @@ function clientTick(){
       else if(e.st==='shell'){if(me.act&&!stomp)netEvent('pk',e.id,0);else{netEvent('kk',e.id,dir);if(stomp)hop()}}
       else if(e.st==='slide'){if(stomp){netEvent('ss',e.id,0);hop()}else if(!me.inv)netEvent('ht',e.id,0)}
     }
-    if(frame%(net.transport==='sb'?3:2)===0){
+    if(frame%(net.transport==='sb'?5:2)===0){
       const r1=v=>Math.round(v*10)/10;
       net.gr.presence({me:{x:r1(me.x),y:r1(me.y),vx:r1(me.vx),vy:r1(me.vy),f:me.face,w:me.w,h:me.h,
         fl:(me.onGround?1:0)|(me.duck?2:0)|(me.wall?4:0)|(me.pound===2?8:0)|(me.step?16:0),a:me.act?1:0,d:me.downIn?1:0,tp:me.tp,ev:net.myEvs}}).catch(()=>{});
@@ -1701,7 +1708,7 @@ document.getElementById('tpause').addEventListener('click',pause);
 let last=performance.now(),acc=0;
 function loop(t){
   acc+=Math.min(100,t-last);last=t;
-  while(acc>=1000/60){tick();acc-=1000/60;if(net.mode==='host'&&net.started&&frame%(net.transport==='sb'?4:2)===0)sendSnap()}
+  while(acc>=1000/60){tick();acc-=1000/60;if(net.mode==='host'&&net.started&&frame%(net.transport==='sb'?5:2)===0)sendSnap()}
   pollPads();render();requestAnimationFrame(loop);
 }
 addEventListener('pagehide',()=>{try{netLeave()}catch(e){}});
