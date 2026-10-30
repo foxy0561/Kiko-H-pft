@@ -30,7 +30,7 @@ Alle Tasten lassen sich unter **Optionen → Steuerung → Tasten belegen** änd
 - **Laden:** Pilz, Glutbeere, Herz und Funkelstern für Münzen
 - **Power-ups:** Pilz (groß), Glutbeere (Feuerbälle), Eisblume (friert Gegner ein – man kann auf ihnen stehen), Feder (Springen halten zum Gleiten), Mini-Pilz (winzig, springt hoch, ein Treffer zählt). Treffer stufen eine Stufe ab, Power-ups bleiben über Level erhalten
 - **Gegner:** Moosling, Käfer, Igel, Fledermaus, Werfer, Schnappblume, Stachelkugel (fällt von der Decke), Feuerspucker, Flügelpanzer und ein Endboss in jeder Burg – bei halber Lebensleiste wird er wütend (Phase 2)
-- **Reittier Hopsi:** aus dem Dino-Ei. Zunge mit Strg frisst Gegner, Springen halten zum Flattern, Ducken + Springen zum Absteigen
+- **Reittier Hopsi:** Das Dino-Ei knackt auf, wenn man es berührt, und Hopsi springt heraus. Zunge mit Strg frisst Gegner, Springen halten zum Flattern, Ducken + Springen zum Absteigen
 - **Gegner-Bounce:** Beim Draufspringen Springen gedrückt halten, um hoch abzuprallen
 - **Weltende:** Statistik mit Zeit, Münzen, Gegnern, großen Münzen und Toden
 - **Figur & Aussehen:** Farbe, Halstuch, Brille, Umhang und 12 Hüte (durch Erfolge freischaltbar)

@@ -125,9 +125,13 @@ body.fs #wrap{border:0;box-shadow:none;width:min(100vw,calc(100dvh * 5 / 3))}
 .stattab .sh{color:var(--gold);font-size:.85em}
 .stattab .sn{text-align:left;display:flex;align-items:center;gap:1cqw;overflow:hidden;white-space:nowrap}
 .stattab .sn i{display:inline-block;flex:none;width:2.2cqh;height:2.2cqh;border:2px solid #000}
-.lookrow{display:flex;align-items:center;gap:3cqw}
-.lookopts .btn{padding:.8cqh 2.4cqw;font-size:max(10px,2.8cqh);min-width:min(46cqw,330px)}
-.lookpv{width:24cqh;height:23cqh;image-rendering:pixelated;background:linear-gradient(#2a2660,#1d1a48);border:max(3px,.6cqh) solid #000}
+.lookrow{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:3cqw;width:min(84cqw,600px)}
+.lookopts{width:100%;align-items:stretch}
+.lookopts .btn,.lookopts .btn.eopt{padding:.8cqh 2.4cqw;font-size:max(10px,2.8cqh);min-width:0;width:100%;box-sizing:border-box;display:flex;justify-content:space-between;gap:2cqw;overflow:hidden}
+.lookopts .btn span:first-child{flex:none}
+.lookopts .btn .val{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.lookopts .btn .val.lockv{color:var(--muted)}
+.lookpv{flex:none;width:24cqh;height:23cqh;image-rendering:pixelated;background:linear-gradient(#2a2660,#1d1a48);border:max(3px,.6cqh) solid #000}
 .hatgrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:.8cqh .6cqw;width:min(76cqw,560px)}
 .hatgrid button{background:var(--panel-2);border:max(2px,.4cqh) solid #000;padding:.4cqh;cursor:pointer;min-width:0}
 .hatgrid button.on{background:var(--gold)}
@@ -509,7 +513,7 @@ const CHARS=[
   {name:'Pim',desc:'Katze',kind:'cat',body:'#7d8bdc',dark:'#4a55a0',belly:'#f1eeff'}
 ];
 /* Version: Online spielen nur Spieler mit gleicher Version zusammen */
-const GAME_VERSION=24;
+const GAME_VERSION=25;
 const PAGES_URL='https://foxy0561.github.io/Kiko-H-pft/';
 /* Spielername (wird lokal gespeichert, online an die anderen geschickt) */
 const cleanName=s=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g,'').trim().slice(0,12);
@@ -1002,8 +1006,8 @@ function buildLevel(i){
   if(i!==EDIT_LV){for(const q of(EXTRA_EN[d.name]||[]))b.enemy(q[0],q[1],q[2]);for(const q of(EXTRA_CT[d.name]||[]))b.content[q[0]+','+q[1]]=q[2]}
   return{i,name:d.name,theme:THEMES[d.theme],w:d.w,g:b.g,goal:b.goal,checks:b.checks.map(x=>({x,on:false})),
     spawns:b.ents.map(e=>({t:e.t,tx:e.x,ty:e.y,v:e.v,e:null,armed:true})),nextId:1,
-    pipes:b.pipes,bigIdx:Object.fromEntries(b.bigs.map((q,k)=>[q[0]+','+q[1],k])),bigGot:b.bigs.map(()=>false),bigPrev:[],balls:[],shots:[],mounts:[],
-    enemies:[],items:(b.items||[]).map(q=>({kind:q.k,x:q.x*T+2,y:(q.y+1)*T-12,w:12,h:12,vx:0,vy:0,rise:0})),content:{...(b.content||{})},fx:[],bumps:[],changes:{}};
+    pipes:b.pipes,bigIdx:Object.fromEntries(b.bigs.map((q,k)=>[q[0]+','+q[1],k])),bigGot:b.bigs.map(()=>false),bigPrev:[],balls:[],shots:[],mounts:(b.items||[]).filter(q=>q.k==='ei').map(q=>mkEgg(q.x*T-1,(q.y+1)*T-22)),
+    enemies:[],items:(b.items||[]).filter(q=>q.k!=='ei').map(q=>({kind:q.k,x:q.x*T+2,y:(q.y+1)*T-12,w:12,h:12,vx:0,vy:0,rise:0})),content:{...(b.content||{})},fx:[],bumps:[],changes:{}};
 }
 
 /* ---------- Fortschritt (gespeichert) ---------- */
@@ -1321,6 +1325,7 @@ function playEv(n,x,y,s){
     case'spike':if(nearCam(x))sfx.spike();break;
     case'thump':if(nearCam(x)){sfx.bossRock();shake(4)}for(const d of[-1,1])L.fx.push({k:'dust',x:x+d*8,y,t:14});break;
     case'gulp':sfx.gulp();break;
+    case'crack':if(nearCam(x)){noise(.08,.9,3200,2.5);beep(900,.05,'square',-300,.5)}for(let i=0;i<2;i++)L.fx.push({k:'deb',x:x+(Math.random()-.5)*12,y,vx:(Math.random()-.5)*2,vy:-2,t:14,c:'#ffffff'});break;
     case'tongue':sfx.tongue();break;
     case'hatch':sfx.hatch();for(let i=0;i<6;i++){const a=i/6*Math.PI*2;L.fx.push({k:'deb',x,y,vx:Math.cos(a)*1.6,vy:Math.sin(a)*1.6-1.5,t:22,c:i%2?'#ffffff':'#5fd068'})}break;
     case'mountoff':sfx.mountOff();break;
@@ -1384,6 +1389,7 @@ function bump(p,tx,ty,force){
     /* Block mit eingebautem Inhalt (aus dem Editor): Item oder Gegner kommt heraus */
     delete L.content[tx+','+ty];setTile(tx,ty,'u');
     if(ck.startsWith('e:')){const e=mkEnemy({t:ck[2],tx,ty:ty-1,e:null,armed:false},L.nextId++);e.y=ty*T;e.vy=0;e.rise=e.h;e.clipY=ty*T;e.spawnT=e.h+45;L.enemies.push(e);ev('bmp',tx,ty)}
+    else if(ck==='ei'){L.mounts.push(mkEgg(tx*T-1,ty*T-22));L.mounts[L.mounts.length-1].vy=-2;ev('bmp',tx,ty)}
     else{L.items.push({kind:ck,x:tx*T+2,y:ty*T,w:12,h:12,vx:0,vy:0,rise:14});ev('bmp',tx,ty)}
   }
   else if(c==='?'||c==='I'){if(ck)delete L.content[tx+','+ty];setTile(tx,ty,'u');if(p){p.coins++;p.score+=100;gotCoin(p)}ev('coin',tx*T+4,ty*T-8,'pop');ev('bmpq',tx,ty)}
@@ -1461,8 +1467,19 @@ function tongueHit(p){
     p.tongueT=Math.min(p.tongueT,6);break;
   }
 }
+function mkEgg(x,y){return{egg:true,x,y,w:18,h:22,vx:0,vy:0,face:1,run:0,grace:0,crack:0}}
+function updateEgg(m){
+  m.vy=Math.min(m.vy+.4,6);moveY(m);if(m.y>H+20){m.dead=true;return}
+  if(m.crack>0){m.crack++;if(m.crack%12===0)ev('crack',m.x+9,m.y+10);
+    if(m.crack>=48){/* Hopsi springt heraus */
+      const t=nearestPlayer(m.x,m.y);Object.assign(m,{egg:false,crack:0,w:16,h:18,x:m.x+1,y:m.y+4,vy:-5.2,vx:0,face:t&&t.x<m.x?-1:1,grace:28,run:0});
+      ev('hatch',m.x+8,m.y+8);ev('txt',m.x-4,m.y-10,'HOPSI!')}
+    return}
+  for(const p of game.players){if(p.dead||p.out||p.bubble||p.atGoal||p.carriedBy)continue;if(overlap(p,m)){m.crack=1;ev('crack',m.x+9,m.y+10);break}}
+}
 function updateMounts(){
   for(const m of L.mounts){
+    if(m.egg){updateEgg(m);continue}
     if(m.grace>0)m.grace--;if(m.run>0)m.run--;else m.vx*=.8;
     m.vy=Math.min(m.vy+.4,6);const ov=m.vx;moveX(m);if(m.hitWall){m.vx=-ov;m.face=-m.face}moveY(m);
     if(m.run>0&&m.onGround){const ax=m.vx>0?m.x+m.w+1:m.x-1;if(!solidAt(Math.floor(ax/T),Math.floor((m.y+m.h+2)/T))&&Math.random()<.5){m.vx=-m.vx;m.face=-m.face}}
@@ -1719,8 +1736,16 @@ function updatePlayer(p){
   p.vy+=((p.vy<0&&inp.jump)?.22:.45)*(p.mini?.75:1);p.vy=Math.min(p.vy,p.mini?4.2:6);
   if(p.feather&&inp.jump&&p.vy>.8&&!p.wall){p.vy=.8;p.glide=true}else p.glide=false;
   /* Reittier-Flattersprung: Springen halten im Fallen */
-  if(p.onGround)p.flutT=0;
-  if(p.mount&&!p.onGround&&inp.jump&&p.vy>.3&&(p.flutT|0)<42){p.vy=Math.max(-.7,p.vy-.95);p.flutT=(p.flutT|0)+1;if(p.flutT%9===1&&!p.local)ev('flap',p.x,p.y)}
+  if(p.onGround){p.flutT=0;p.flutDone=false}
+  /* Erst beim Fallen Springen halten: Hopsi strampelt gegen die Schwerkraft –
+     erst bremst er den Fall, dann geht es ein kleines Stück mühsam nach oben. Einmal pro Sprung. */
+  if(p.mount&&!p.onGround&&!p.flutDone){
+    if(inp.jump&&(p.flutT>0||p.vy>.6)){
+      p.flutT=(p.flutT|0)+1;const lift=(p.vy>0?.64:.24)+.12*Math.sin(p.flutT*.55);p.vy=Math.max(-.75,p.vy-lift);p.fluttering=true;
+      if(p.flutT%8===1){if(p.local)playEv('flap',0,0,'');else ev('flap',p.x,p.y)}
+      if(p.flutT>=54){p.flutDone=true;p.fluttering=false}
+    }else if(p.flutT>0){p.flutDone=true;p.fluttering=false}
+  }else p.fluttering=false;
   p.prevBottom=p.y+p.h;
   moveX(p);moveY(p);
   if(p.head){if(p.local)netEvent('hb',p.head.tx,p.head.ty);else bump(p,p.head.tx,p.head.ty,false)}
@@ -2398,7 +2423,7 @@ function drawPlayers(cx){
     if(p.mount&&!p.dead){
       const rw=p.big?14:12,rh=p.big?24:15,dy=y+p.h-18,rx=p.face>0?x-1:x+16-rw+1,ry=p.duck?dy-rh+9:dy-rh+8;
       drawHero(rx,ry,rw,rh,C,game.players.length>1?COLORS[p.id].c:null,p.face,0,{fire:!!p.fire,ice:!!p.ice,feather:!!p.feather,hat:p.hat|0,star:p.star>0});
-      drawDino(x,dy,p.face,p.step|0);
+      drawDino(x,dy,p.face,(p.fluttering||p.flutOn)?(frame>>1)%2:p.step|0);
       const tl=p.tongueT>0?Math.round(Math.sin((1-p.tongueT/18)*Math.PI)*40):p.tongueOn?Math.round(20+Math.sin(frame*.4)*14):0;drawTongue(x,dy,p.face,tl);
     }else drawHero(x,y,p.w,p.h,C,game.players.length>1?COLORS[p.id].c:null,p.face,p.step|0,{dead:p.dead,carry:!!p.carry||!!p.carryP||p.carrying,wall:!!p.wall,pound:p.pound===2,fire:!!p.fire,ice:!!p.ice,feather:!!p.feather,glide:!!p.glide,hat:p.hat|0,star:p.star>0,vx:p.vx});
     if(clip)ctx.restore();
@@ -2551,7 +2576,16 @@ function drawTongue(x,y,face,len){
   if(len<=0)return;const mx=face>0?x+15:x+1,my=y+5;
   for(let i=0;i<len;i++)R(face>0?mx+i:mx-i-1,my,1,2,'#ff5a8a');R(face>0?mx+len-1:mx-len-2,my-1,3,4,'#ff5a8a');R(face>0?mx+len:mx-len-1,my-1,1,1,'#ffc2d6');
 }
-function drawMounts(cx){for(const m of L.mounts){const x=Math.round(m.x-cx);if(x<-20||x>W+20)continue;drawDino(x,Math.round(m.y),m.face,m.run>0?(frame>>3)%2:0)}}
+function drawEgg(x,y,crack){
+  const wob=crack>0?Math.round(Math.sin(crack*.9)*Math.min(2,1+crack/16)):0;x+=wob;
+  ctx.fillStyle=INK;ctx.beginPath();ctx.ellipse(x+9,y+12,9,11,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffffff';ctx.beginPath();ctx.ellipse(x+9,y+12,7.6,9.6,0,0,Math.PI*2);ctx.fill();
+  R(x+4,y+5,3,3,'#4cc860');R(x+11,y+9,4,4,'#4cc860');R(x+5,y+14,3,3,'#4cc860');R(x+12,y+17,2,2,'#4cc860');R(x+5,y+4,1,1,'#ffffff');
+  R(x+5,y+4,2,1,'#e6f6ff');R(x+4,y+6,1,3,'#e6f6ff');
+  if(crack>0){const n=Math.min(6,1+(crack/8|0));ctx.strokeStyle=INK;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+2,y+11);
+    for(let i=1;i<=n;i++)ctx.lineTo(x+2+i*2.5,y+11+(i%2?-2:2));ctx.stroke()}
+}
+function drawMounts(cx){for(const m of L.mounts){const x=Math.round(m.x-cx);if(x<-24||x>W+24)continue;if(m.egg){drawEgg(x,Math.round(m.y),m.crack|0);continue}drawDino(x,Math.round(m.y),m.face,m.run>0?(frame>>3)%2:0)}}
 function drawWing(x,y,e){
   const up=(frame>>3)%2;drawBeetle(x,y,e);
   R(x+3,y-3-up*2,6,4,INK);R(x+4,y-2-up*2,4,2,'#ffffff');R(x+1,y-1-up,3,3,INK);R(x+2,y-1-up,1,1,'#ffffff');
@@ -2961,13 +2995,13 @@ function hostStart(){
 function sendSnap(){
   if(!net.gr)return;
   const r=Math.round;
-  const P=game.players.map(p=>[p.id,r(p.x),r(p.y),p.face,(p.dead?1:0)|(p.out?2:0)|(p.big?4:0)|(p.duck?8:0)|(p.inv>0?32:0)|(p.carry||p.carryP?64:0)|(p.step?128:0)|(p.wall?256:0)|(p.pound===2?512:0)|(p.bubble?1024:0)|(p.carriedBy?2048:0)|(p.star>0?4096:0)|(p.fire?8192:0)|(p.pipeT>0||p.pipeOut>0?16384:0)|(p.atGoal?32768:0)|(p.ice?65536:0)|(p.feather?131072:0)|(p.mini?262144:0)|(p.glide?524288:0)|(p.mount?1048576:0)|(p.tongueT>0?2097152:0),
+  const P=game.players.map(p=>[p.id,r(p.x),r(p.y),p.face,(p.dead?1:0)|(p.out?2:0)|(p.big?4:0)|(p.duck?8:0)|(p.inv>0?32:0)|(p.carry||p.carryP?64:0)|(p.step?128:0)|(p.wall?256:0)|(p.pound===2?512:0)|(p.bubble?1024:0)|(p.carriedBy?2048:0)|(p.star>0?4096:0)|(p.fire?8192:0)|(p.pipeT>0||p.pipeOut>0?16384:0)|(p.atGoal?32768:0)|(p.ice?65536:0)|(p.feather?131072:0)|(p.mini?262144:0)|(p.glide?524288:0)|(p.mount?1048576:0)|(p.tongueT>0?2097152:0)|(p.fluttering?4194304:0),
     p.w,p.h,p.lives,p.coins,p.score,p.ch,p.name||'',p.tp|0,p.imp|0,Math.round((p.impVy||0)*10)/10,Math.round(p.vx*10)/10,Math.round(p.vy*10)/10,p.carriedBy?p.carriedBy.id:-1,p.hat|0]);
   const dist=e=>{let d=1e9;for(const p of game.players)if(!p.out)d=Math.min(d,Math.abs(p.x-e.x));return d};
   const E=L.enemies.filter(e=>inViews(e.x,48)).sort((a,b)=>dist(a)-dist(b)).slice(0,22).map(e=>[e.id,e.type,EST.indexOf(e.st),r(e.x),r(e.y),e.vx>0?1:0,
     (((e.st==='shell'||e.st==='carry')&&e.timer>WAKE-90)||(e.st==='frozen'&&e.timer<70)||(e.type==='s'&&e.sm===1))?1:0,e.upside?1:0,e.wasWalk?1:0,Math.round(e.vx*10),e.hp|0,e.inv>0?1:0]);
   const snap={t:frame,st:state,lv:game.level,rs:game.rs,time:game.time,cam:r(cam.x),fy:r(flagY),ck:game.check,P,E,
-    I:L.items.map(i=>[r(i.x),r(i.y),Math.max(0,KINDS.indexOf(i.kind))]),B:L.balls.map(b=>[r(b.x),r(b.y),b.k==='ice'?1:0]),M:L.mounts.map(m=>[r(m.x),r(m.y),m.face>0?1:-1,m.run>0?1:0]),S:L.shots.slice(0,8).map(q=>[r(q.x),r(q.y),Math.max(0,SHOTK.indexOf(q.k))]),
+    I:L.items.map(i=>[r(i.x),r(i.y),Math.max(0,KINDS.indexOf(i.kind))]),B:L.balls.map(b=>[r(b.x),r(b.y),b.k==='ice'?1:0]),M:L.mounts.map(m=>[r(m.x),r(m.y),m.egg?(m.crack|0)+1:0,m.face>0?1:-1,m.run>0?1:0]),S:L.shots.slice(0,8).map(q=>[r(q.x),r(q.y),Math.max(0,SHOTK.indexOf(q.k))]),
     bg:(L.bigGot||[]).map(Number),bp:(L.bigPrev||[]).map(Number),G:Object.values(L.changes),ev:net.evq.slice()};
   if(state==='map'||state==='shop'||(state==='pause'&&pausedFrom==='map')){snap.m={n:mapv.node,x:r(mapv.dx),y:r(mapv.dy),cl:Object.keys(prog.cleared).map(Number),bg:prog.big};snap.E=[];snap.G=[];snap.I=[];snap.B=[];snap.S=[];snap.M=[]}
   if(state==='wstats'||state==='win')snap.ws=game.wsData||null;
@@ -3082,7 +3116,7 @@ function applySnap(s){
   game.players=(s.P||[]).map(a=>{
     const id=a[0]&3,f=a[4];let p=pm.get(id);
     if(!p){if(id===net.mySlot){p=newPlayer(id,'sp',0,'');p.local=true;p.tp=-1}else p={id};p.x=a[1];p.y=a[2]}
-    const auth={dead:!!(f&1),out:!!(f&2),inv:(f&32)?1:0,carrying:!!(f&64),bubble:!!(f&1024),carried:!!(f&2048),star:(f&4096)?1:0,fire:!!(f&8192),inPipe:!!(f&16384),atGoal:!!(f&32768),ice:!!(f&65536),feather:!!(f&131072),glide:!!(f&524288),mount:!!(f&1048576),tongueOn:!!(f&2097152),hat:cleanHat(a[18]),
+    const auth={dead:!!(f&1),out:!!(f&2),inv:(f&32)?1:0,carrying:!!(f&64),bubble:!!(f&1024),carried:!!(f&2048),star:(f&4096)?1:0,fire:!!(f&8192),inPipe:!!(f&16384),atGoal:!!(f&32768),ice:!!(f&65536),feather:!!(f&131072),glide:!!(f&524288),mount:!!(f&1048576),tongueOn:!!(f&2097152),flutOn:!!(f&4194304),hat:cleanHat(a[18]),
       carriedById:Number.isInteger(a[17])?a[17]:-1,lives:a[7],coins:a[8],score:a[9],
       ch:Math.max(0,Math.min(CHARS.length-1,a[10]|0)),name:cleanName(a[11])};
     const lk={face:a[3]>0?1:-1,big:!!(f&4),mini:!!(f&262144),duck:!!(f&8),step:(f&128)?1:0,wall:(f&256)?1:0,pound:(f&512)?2:0,w:a[5],h:a[6]};
@@ -3111,7 +3145,7 @@ function applySnap(s){
   if(inLevel){
     L.items=(s.I||[]).map(a=>({x:a[0],y:a[1],w:12,h:12,kind:KINDS[a[2]|0]||'pilz'}));
     L.balls=(s.B||[]).map(a=>({x:a[0],y:a[1],k:a[2]?'ice':'fire'}));
-    L.mounts=(s.M||[]).map(a=>({x:a[0],y:a[1],w:16,h:18,face:a[2]<0?-1:1,run:a[3]?1:0}));
+    L.mounts=(s.M||[]).map(a=>a[2]>0?{egg:true,x:a[0],y:a[1],w:18,h:22,crack:(a[2]|0)-1}:{x:a[0],y:a[1],w:16,h:18,face:a[3]<0?-1:1,run:a[4]?1:0});
     L.shots=(s.S||[]).map(a=>({x:a[0],y:a[1],k:SHOTK[a[2]|0]||'hammer'}));
     if(Array.isArray(s.bg))L.bigGot=s.bg.map(Boolean);if(Array.isArray(s.bp))L.bigPrev=s.bp.map(Boolean);
   }
@@ -3727,7 +3761,7 @@ function drawEditor(){
   for(const k in ed.ct){const[bx,by]=k.split(',').map(Number);const x=bx*T-cx,y=by*T;if(x<-16||x>W)continue;const v=ed.ct[k];
     R(x+5,y-7,10,10,'rgba(16,14,40,.75)');ctx.save();ctx.translate(x+6,y-6);ctx.scale(.5,.5);
     if(v==='coin')drawTile('c',0,0,0,1);else if(v.startsWith('e:')){const e=mkEnemy({t:v[2],tx:0,ty:0},0);e.anim=0;e.vx=1;({m:drawMoss,e:drawBeetle,h:drawHedgehog,b:drawBat,w:drawThrower,f:drawSpitter,q:drawWing}[v[2]]||drawMoss)(1,2,e)}else drawItemAt(v,2,2);ctx.restore()}
-  drawItems(cx);drawGoal(cx);drawChecks(cx);drawEnemies(cx);
+  drawItems(cx);drawMounts(cx);drawGoal(cx);drawChecks(cx);drawEnemies(cx);
   /* Röhren-Verbindungen */
   ctx.lineWidth=1;
   ed.links.forEach((l,i)=>{const ax=l[0]*T+16-cx,ay=l[1]*T,bx2=l[2]*T+16-cx,by2=l[3]*T,col=['#5fd068','#ffc83d','#5ab8ff','#ff7ab6'][i%4];
@@ -3858,9 +3892,9 @@ const lookView={c:0,h:0};
 function lookRender(){
   const c=document.getElementById('lookPv'),c2=c.getContext('2d'),old=ctx;ctx=c2;c2.imageSmoothingEnabled=false;c2.clearRect(0,0,c.width,c.height);
   drawHero(19,16,14,24,CHARS[lookView.c],null,1,(frame>>4)%2,{hat:lookPack(lookView.h),vx:1.2});ctx=old;
-  const L2={c:CHARS[lookView.c].name,col:BODY_COLS[look.col].n,sc:SCARF_COLS[look.sc].n,gl:GLASSES[look.gl].n,cp:CAPES[look.cp].n,h:HATS[lookView.h].n+(hatOpen(lookView.h)?'':' (gesperrt)')};
-  screens.look.querySelectorAll('[data-lopt]').forEach(b=>{b.querySelector('.val').textContent=L2[b.dataset.lopt]});
-  const h=HATS[lookView.h];document.getElementById('lookInfo').textContent=hatOpen(lookView.h)?(look.h===lookView.h?'Ausgerüstet – du trägst ihn in jedem Spiel.':''):'Freischalten: '+h.t+hatProg(lookView.h);
+  const L2={c:CHARS[lookView.c].name,col:BODY_COLS[look.col].n,sc:SCARF_COLS[look.sc].n,gl:GLASSES[look.gl].n,cp:CAPES[look.cp].n,h:HATS[lookView.h].n};
+  screens.look.querySelectorAll('[data-lopt]').forEach(b=>{const v=b.querySelector('.val');v.textContent=L2[b.dataset.lopt];v.classList.toggle('lockv',b.dataset.lopt==='h'&&!hatOpen(lookView.h));b.title=L2[b.dataset.lopt]});
+  const h=HATS[lookView.h];document.getElementById('lookInfo').textContent=hatOpen(lookView.h)?(look.h===lookView.h?'Ausgerüstet – du trägst ihn in jedem Spiel.':''):'Gesperrt – freischalten: '+h.t+hatProg(lookView.h);
   const g=document.getElementById('hatGrid');
   if(!g.children.length){g.innerHTML=HATS.map((x,i)=>`<button type="button" data-hat="${i}" title="${x.n}"><canvas width="20" height="28"></canvas></button>`).join('')}
   g.querySelectorAll('button').forEach((b,i)=>{b.classList.toggle('on',i===lookView.h);b.classList.toggle('lock',!hatOpen(i));
