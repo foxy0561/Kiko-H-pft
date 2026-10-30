@@ -354,9 +354,9 @@ body.fs #wrap{border:0;box-shadow:none;width:min(100vw,calc(100dvh * 5 / 3))}
     <section class="screen card" data-screen="controls" hidden>
       <h2>Steuerung</h2>
       <dl class="ctrl">
-        <dt>Einzelspieler</dt><dd>A/D oder ← → laufen · W, Leertaste oder ↑ springen · S oder ↓ ducken · Shift rennen · Strg aufheben</dd>
-        <dt>Tastatur links</dt><dd>A/D laufen · W oder Leertaste springen · S ducken · Shift links rennen · Strg links aufheben</dd>
-        <dt>Tastatur rechts</dt><dd>← → laufen · ↑ springen · ↓ ducken · Shift rechts rennen · Strg rechts aufheben</dd>
+        <dt>Einzelspieler</dt><dd>A/D oder ← → laufen · Leertaste springen · W oder ↑ hoch (z. B. vom Reittier absteigen) · S oder ↓ ducken · Shift rennen · Strg aufheben</dd>
+        <dt>Tastatur links</dt><dd>A/D laufen · Leertaste springen · W hoch · S ducken · Shift links rennen · Strg links aufheben</dd>
+        <dt>Tastatur rechts</dt><dd>← → laufen · Enter springen · ↑ hoch · ↓ ducken · Shift rechts rennen · Strg rechts aufheben</dd>
         <dt>Gamepad</dt><dd>Stick · A springen · Stick runter ducken · X rennen · Y aufheben · Start Pause</dd>
         <dt>Pause</dt><dd>Esc oder P</dd>
         <dt>Tragen</dt><dd>Mitspieler berühren und Strg drücken · loslassen wirft · Getragene springen mit Springen ab</dd>
@@ -513,7 +513,7 @@ const CHARS=[
   {name:'Pim',desc:'Katze',kind:'cat',body:'#7d8bdc',dark:'#4a55a0',belly:'#f1eeff'}
 ];
 /* Version: Online spielen nur Spieler mit gleicher Version zusammen */
-const GAME_VERSION=25;
+const GAME_VERSION=26;
 const PAGES_URL='https://foxy0561.github.io/Kiko-H-pft/';
 /* Spielername (wird lokal gespeichert, online an die anderen geschickt) */
 const cleanName=s=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g,'').trim().slice(0,12);
@@ -530,6 +530,7 @@ const settings=JSON.parse(JSON.stringify(DEFAULTS));
 try{Object.assign(settings,JSON.parse(localStorage.getItem('kiko-settings')||'{}'))}catch(e){}
 if(!settings.kb||typeof settings.kb!=='object')settings.kb={};
 if(!settings.pad||typeof settings.pad!=='object')settings.pad={};
+if(settings.kbV!==2){for(const set of['k1','k2']){const j=settings.kb[set]&&settings.kb[set].jump;if(Array.isArray(j)&&(j.includes('KeyW')||j.includes('ArrowUp')))delete settings.kb[set].jump}settings.kbV=2}
 if(settings.musV!==2){if(settings.musVol===5)settings.musVol=3;settings.musV=2}
 const DIFF_SPD=[.7,1,1.35],DIFF_TIME=[400,300,200];
 const saveSettings=()=>{try{localStorage.setItem('kiko-settings',JSON.stringify(settings))}catch(e){}};
@@ -654,8 +655,8 @@ function musicTick(){
 /* ---------- Eingabe ---------- */
 const keys={};
 const KB={
-  k1:{left:['KeyA'],right:['KeyD'],jump:['KeyW','Space'],down:['KeyS'],act:['ControlLeft'],run:['ShiftLeft']},
-  k2:{left:['ArrowLeft'],right:['ArrowRight'],jump:['ArrowUp'],down:['ArrowDown'],act:['ControlRight','Numpad0'],run:['ShiftRight']}
+  k1:{left:['KeyA'],right:['KeyD'],jump:['Space'],up:['KeyW'],down:['KeyS'],act:['ControlLeft'],run:['ShiftLeft']},
+  k2:{left:['ArrowLeft'],right:['ArrowRight'],jump:['Enter','Numpad1'],up:['ArrowUp'],down:['ArrowDown'],act:['ControlRight','Numpad0'],run:['ShiftRight']}
 };
 const KB_DEF=JSON.parse(JSON.stringify(KB));
 const PAD_DEF={jump:[0,1],run:[2,7],act:[3,5],down:[13],pause:[9]};
@@ -665,14 +666,14 @@ function applyPad(){const c=settings.pad||{};for(const a in PAD_DEF)PADMAP[a]=Ar
 applyPad();
 function applyKb(){for(const set of['k1','k2']){const c=settings.kb[set]||{};for(const a in KB_DEF[set])KB[set][a]=Array.isArray(c[a])&&c[a].length?c[a].slice():KB_DEF[set][a].slice()}}
 applyKb();
-const touch={left:false,right:false,jump:false,down:false,act:false,run:false};
+const touch={left:false,right:false,jump:false,down:false,act:false,run:false,up:false};
 const pads=()=>{try{return navigator.getGamepads?[...navigator.getGamepads()]:[]}catch(e){return[]}};
 const pb=(gp,i)=>!!(gp.buttons[i]&&gp.buttons[i].pressed);
-const blank=()=>({left:false,right:false,jump:false,down:false,act:false,run:false});
+const blank=()=>({left:false,right:false,jump:false,down:false,act:false,run:false,up:false});
 function padRead(i,r){const gp=pads()[i];if(!gp)return;const ax=gp.axes[0]||0,ay=gp.axes[1]||0;
   const P=k=>PADMAP[k].some(n=>pb(gp,n));
   if(ax<-.35||pb(gp,14))r.left=true;if(ax>.35||pb(gp,15))r.right=true;if(P('jump'))r.jump=true;
-  if(ay>.55||P('down'))r.down=true;if(P('act'))r.act=true;if(P('run'))r.run=true}
+  if(ay>.55||P('down'))r.down=true;if(ay<-.55||pb(gp,12))r.up=true;if(P('act'))r.act=true;if(P('run'))r.run=true}
 function kbRead(s,r){for(const k in s)if(s[k].some(c=>keys[c]))r[k]=true}
 function readInput(dev){
   const r=blank();
@@ -989,7 +990,7 @@ const lvNum=i=>LEVELS.slice(0,i+1).filter(l=>(l.world|0)===lvWorld(i)).length;
 const SOLID=new Set(['#','B','?','P','=','u','S','H','y','z','Y','Z','G','M']);
 const KINDS=['pilz','glut','stern','herz','eis','feder','mini','ei'];
 const SHOTK=['hammer','snow','fire','ice','rock','wave','icicle','stone','spit'];
-const EST=['walk','shell','slide','carry','squash','fall','frozen'];
+const EST=['walk','shell','slide','carry','squash','fall','frozen','grab'];
 function mkEnemy(s,id){const e={id,spawn:s,type:s.t,st:'walk',x:s.tx*T+1,y:(s.ty+1)*T-12,w:14,h:12,vx:s.t==='b'?0:-.45,vy:0,timer:0,upside:false,
   active:true,remove:false,anim:Math.random()*10,kicker:null,grace:0,carrier:null};
   /* p = Schnappblume (wohnt in einer Röhre), w = Werfer, k = Endboss */
@@ -1188,7 +1189,11 @@ function startGame(devs){
   for(const p of game.players)if(p.dev.startsWith('net:')){const r=net.remote[p.dev.slice(4)];p.evSeen=r&&r.ev.length?r.ev[r.ev.length-1][0]:0}
   state='map';show(null);
 }
-function loadLevel(){L=buildLevel(game.level);L.bigPrev=(prog.big[game.level]||[]).map(Boolean);game.time=settings.timer?DIFF_TIME[settings.diff|0]||300:-1;game.rs++;placePlayers();state='intro';introT=110;flagY=0}
+function loadLevel(){
+  /* nach dem Tod mit Checkpoint: schon gefundene große Münzen bleiben eingesammelt */
+  const keep=(L&&L.i===game.level&&game.check!==null&&Array.isArray(L.bigGot))?L.bigGot.slice():null;
+  L=buildLevel(game.level);
+  if(keep){for(const k in L.bigIdx){const i=L.bigIdx[k];if(keep[i]){L.bigGot[i]=true;const[x,y]=k.split(',').map(Number);if(L.g[y]&&L.g[y][x]==='O')setTile(x,y,'.')}}}L.bigPrev=(prog.big[game.level]||[]).map(Boolean);game.time=settings.timer?DIFF_TIME[settings.diff|0]||300:-1;game.rs++;placePlayers();state='intro';introT=110;flagY=0}
 function fillScores(kind,list){
   const el=document.getElementById(kind==='win'?'winScores':'overScores');
   el.innerHTML=list.map(p=>`<div><i style="background:${COLORS[p.id].c}"></i>${esc(p.name||('P'+(p.id+1)))} · ${CHARS[p.ch|0].name} <span>${String(p.score|0).padStart(6,'0')}</span></div>`).join('')+
@@ -1439,7 +1444,7 @@ function kill(p,fell){
   if(p.dead||p.out)return;
   dropCarry(p);if(p.carryP)releaseP(p.carryP,0,-2);if(p.carriedBy)releaseP(p,0,0);
   statAdd(p,'d');
-  p.dead=true;p.deadT=0;p.vx=0;p.vy=fell?0:-5;p.big=false;p.fire=false;p.ice=false;p.feather=false;p.mini=false;p.mount=false;p.tongueT=0;p.star=0;p.pipeT=0;p.pipeOut=0;p.duck=false;p.wall=0;p.pound=0;ev('hurt');
+  p.dead=true;p.deadT=0;p.vx=0;p.vy=fell?0:-5;p.big=false;p.fire=false;p.ice=false;p.feather=false;p.mini=false;p.mount=false;p.tongueT=0;p.mouth=0;p.grabId=0;p.star=0;p.pipeT=0;p.pipeOut=0;p.duck=false;p.wall=0;p.pound=0;ev('hurt');
 }
 /* Reittier: aufsitzen, absteigen, Zunge */
 function mountUp(p){
@@ -1448,21 +1453,34 @@ function mountUp(p){
   if(collides(p)){for(const dx of[2,-2,4,-4,6,-6,8,-8]){p.x+=dx;if(!collides(p))break;p.x-=dx}}
 }
 function dismount(p,run){
-  if(!p.mount)return;const bot=p.y+p.h,mx=p.x;p.mount=false;p.tongueT=0;
+  if(!p.mount)return;p.mouth=0;p.grabId=0;const bot=p.y+p.h,mx=p.x;p.mount=false;p.tongueT=0;
   const[w,h]=sizeFor(p);p.x+=(p.w-w)/2;p.w=w;p.h=h;p.y=bot-h;
   L.mounts.push({x:mx,y:bot-18,w:16,h:18,vx:run?-(p.face||1)*2.6:0,vy:run?-2:0,face:run?-(p.face||1):(p.face||1),run:run?420:0,grace:run?60:45});
   ev(run?'mountoff':'jump',p.x,p.y);
 }
+/* Zunge packt den Gegner und zieht ihn ins Maul */
 function eatEnemy(p,e){
-  if(!e||e.type==='k'||e.st==='fall'||e.spawnT>0)return;
+  if(!e||e.type==='k'||e.st==='fall'||e.st==='grab'||e.spawnT>0)return;
   if(e.carrier){e.carrier.carry=null;e.carrier=null}
-  e.remove=true;e.st='squash';e.timer=0;p.score+=200;statAdd(p,'e');ev('gulp',e.x,e.y);ev('txt',e.x,e.y-6,'MAMPF');
+  e.st='grab';e.grabber=p;e.vx=0;e.vy=0;p.grabId=e.id;p.tongueT=Math.min(Math.max(p.tongueT,7),9);
+}
+function swallow(p,e){
+  e.remove=true;e.st='squash';e.timer=0;p.grabId=0;
+  if(e.type==='e'||e.type==='q'){p.mouth=1;ev('gulp',e.x,e.y);ev('txt',e.x,e.y-6,'PANZER!')}
+  else{p.score+=200;statAdd(p,'e');p.gulpT=24;ev('gulp',e.x,e.y);ev('txt',e.x,e.y-6,'MAMPF')}
+}
+/* Panzer wieder ausspucken: rutscht los wie ein getretener Panzer */
+function spitShell(p){
+  if(!p.mouth)return;p.mouth=0;
+  const e=mkEnemy({t:'e',tx:0,ty:0},L.nextId++);e.x=p.face>0?p.x+p.w+1:p.x-e.w-1;e.y=p.y+p.h-e.h-2;
+  if(collides(e))e.x=p.x+(p.w-e.w)/2;
+  kick(e,p,p.face||1);e.grace=18;L.enemies.push(e);ev('kick');
 }
 function tongueHit(p){
   const prog=1-p.tongueT/18,len=Math.round(Math.sin(prog*Math.PI)*40),mx=p.face>0?p.x+p.w:p.x,my=p.y+p.h-14;
   const tip={x:p.face>0?mx+len-4:mx-len-4,y:my-4,w:8,h:8};
   for(const e of L.enemies){
-    if(e.type==='k'||e.st==='fall'||e.st==='squash'||e.st==='carry'||e.spawnT>0||!overlap(tip,e))continue;
+    if(e.type==='k'||e.st==='fall'||e.st==='squash'||e.st==='carry'||e.st==='grab'||e.spawnT>0||!overlap(tip,e))continue;
     if(p.local){if((e.hitT|0)>frame)continue;e.hitT=frame+30;netEvent('tg',e.id,0)}else eatEnemy(p,e);
     p.tongueT=Math.min(p.tongueT,6);break;
   }
@@ -1685,11 +1703,16 @@ function updatePlayer(p){
   const downPress=inp.down&&!p.downHeld;p.downHeld=inp.down;if(!inp.down)p.downLatch=false;
   const runPress=inp.shift&&!p.runHeld;p.runHeld=inp.shift;
   const actPress=inp.act&&!p.actHeldT;p.actHeldT=inp.act;
+  if(!p.mount)p.upHeld=inp.up;
   if(p.mount){
-    if(p.tongueT>0){p.tongueT--;tongueHit(p)}
+    if(p.gulpT>0)p.gulpT--;
+    if(p.grabId&&!L.enemies.some(e=>e.id===p.grabId&&e.st==='grab'))p.grabId=0;
+    if(p.tongueT>0){p.tongueT=Math.max(0,p.tongueT-(p.grabId?.5:1));if(!p.grabId)tongueHit(p)}
+    else if(actPress&&p.mouth){if(p.local){netEvent('sp',p.face,0);p.mouth=0}else spitShell(p)}
     else if(actPress){p.tongueT=18;if(p.local){playEv('tongue',0,0,'');netEvent('tq',0,0)}else ev('tongue')}
-    /* Ducken + Springen: absteigen */
-    if(inp.down&&inp.jump&&!p.jumpHeld){if(p.local)netEvent('dm',0,0);dismount(p,false);p.vy=-5.6;p.onGround=false;p.jumpHeld=true;return}
+    /* Hoch (W / ↑) oder Ducken + Springen: absteigen */
+    const upPress=inp.up&&!p.upHeld;p.upHeld=inp.up;
+    if(upPress||(inp.down&&inp.jump&&!p.jumpHeld)){if(p.local)netEvent('dm',0,0);dismount(p,false);p.vy=-5.6;p.onGround=false;p.jumpHeld=true;return}
   }
   if(p.star>0&&!p.local)p.star--;
   /* in eine Röhre sinken */
@@ -1843,7 +1866,8 @@ function applyRemote(p){
     else if(q[1]==='pl')poundWorld(p,Number.isFinite(+q[2])?+q[2]:p.x+p.w/2,Number.isFinite(+q[3])?+q[3]:p.y+p.h);
     else if(q[1]==='fb'){if(p.fire||p.ice)spawnBall(p,(q[2]|0)<0?-1:1)}
     else if(q[1]==='tq'){if(p.mount){p.tongueT=18;ev('tongue',p.x,p.y)}}
-    else if(q[1]==='tg'){const e=L.enemies.find(o=>o.id===(q[2]|0));if(p.mount&&e&&Math.abs(e.x-p.x)<90)eatEnemy(p,e)}
+    else if(q[1]==='tg'){const e=L.enemies.find(o=>o.id===(q[2]|0));if(p.mount&&e&&Math.abs(e.x-p.x)<90){if(p.tongueT<=0)p.tongueT=9;eatEnemy(p,e)}}
+    else if(q[1]==='sp'){if(p.mount&&p.mouth){p.face=(q[2]|0)<0?-1:1;spitShell(p)}}
     else if(q[1]==='dm'){if(p.mount){p.x=r.x-2;p.y=r.y+(p.big?24:15)-p.h;dismount(p,false)}}
     else{const ox=p.x,oy=p.y;p.x=r.x;p.y=r.y;remoteHit(p,q[1],q[2]|0,q[3]|0);p.x=ox;p.y=oy}
   }
@@ -1851,7 +1875,7 @@ function applyRemote(p){
   const fl=r.fl;p.onGround=!!(fl&1);if(p.onGround)p.combo=0;p.duck=!!(fl&2);p.wall=(fl&4)?1:0;p.pound=(fl&8)?2:0;p.step=(fl&16)?1:0;
   p.act=r.a;p.prevBottom=p.y+p.h-Math.max(0,p.vy);
   worldPart(p,{act:r.a,down:r.d});
-  if(p.inv>0)p.inv--;if(p.star>0)p.star--;if(p.tongueT>0)p.tongueT--;
+  if(p.inv>0)p.inv--;if(p.star>0)p.star--;if(p.tongueT>0)p.tongueT=Math.max(0,p.tongueT-(p.grabId?.5:1));if(p.gulpT>0)p.gulpT--;
 }
 function netEvent(t,a,b){net.myEvId=(net.myEvId|0)+1;net.myEvs.push([net.myEvId,t,Math.round(a),Math.round(b)]);if(net.myEvs.length>8)net.myEvs.shift()}
 /* Mitspieler tragen: Aufheben-Taste drücken, wenn man jemanden berührt */
@@ -1926,6 +1950,9 @@ function updateEnemies(){
       case'squash':if(--e.timer<=0){e.remove=true;ev('poofs',e.x+7,e.y+10)}break;
       case'fall':e.vy+=.35;e.y+=e.vy;e.x+=e.vx;if(e.y>H+40)e.remove=true;break;
       case'carry':if(++e.timer>WAKE)wake(e);break;
+      case'grab':{const p=e.grabber;if(!p||!p.mount||p.dead){e.st='walk';e.grabber=null;if(p)p.grabId=0;break}
+        const len=Math.round(Math.sin((1-p.tongueT/18)*Math.PI)*40),mx=p.face>0?p.x+p.w:p.x;
+        e.x=(p.face>0?mx+len-2:mx-len-e.w+2);e.y=p.y+p.h-14-e.h/2;if(p.tongueT<=1)swallow(p,e);break}
       case'frozen':if(--e.timer<=0){unfreeze(e);break}if(e.type!=='p'){e.vy=Math.min(e.vy+.4,6);moveY(e)}break;
       case'shell':{
         if(++e.timer>WAKE){wake(e);break}
@@ -2421,10 +2448,10 @@ function drawPlayers(cx){
     const clip=(p.pipeT>0||p.pipeOut>0)&&p.pipeTop!==undefined;
     if(clip){ctx.save();ctx.beginPath();ctx.rect(x-12,-50,p.w+24,p.pipeTop*T+50);ctx.clip()}
     if(p.mount&&!p.dead){
-      const rw=p.big?14:12,rh=p.big?24:15,dy=y+p.h-18,rx=p.face>0?x-1:x+16-rw+1,ry=p.duck?dy-rh+9:dy-rh+8;
+      const rw=p.big?14:12,rh=p.big?24:15,dy=y+p.h-18,rx=p.face>0?x-1:x+16-rw+1,ry=p.duck?dy+5-rh+8:dy-rh+8;
       drawHero(rx,ry,rw,rh,C,game.players.length>1?COLORS[p.id].c:null,p.face,0,{fire:!!p.fire,ice:!!p.ice,feather:!!p.feather,hat:p.hat|0,star:p.star>0});
-      drawDino(x,dy,p.face,(p.fluttering||p.flutOn)?(frame>>1)%2:p.step|0);
-      const tl=p.tongueT>0?Math.round(Math.sin((1-p.tongueT/18)*Math.PI)*40):p.tongueOn?Math.round(20+Math.sin(frame*.4)*14):0;drawTongue(x,dy,p.face,tl);
+      drawDino(x,dy,p.face,(p.fluttering||p.flutOn)?(frame>>1)%2:p.step|0,{duck:p.duck,mouth:p.mouth,gulp:p.gulpT>0||p.gulpOn});
+      const tl=p.tongueT>0?Math.round(Math.sin((1-p.tongueT/18)*Math.PI)*40):p.tongueOn?Math.round(20+Math.sin(frame*.4)*14):0;drawTongue(x,p.duck?dy+5:dy,p.face,tl);
     }else drawHero(x,y,p.w,p.h,C,game.players.length>1?COLORS[p.id].c:null,p.face,p.step|0,{dead:p.dead,carry:!!p.carry||!!p.carryP||p.carrying,wall:!!p.wall,pound:p.pound===2,fire:!!p.fire,ice:!!p.ice,feather:!!p.feather,glide:!!p.glide,hat:p.hat|0,star:p.star>0,vx:p.vx});
     if(clip)ctx.restore();
     if(p.star>0&&frame%4===0)L.fx.push({k:'deb',x:p.x+Math.random()*p.w,y:p.y+Math.random()*p.h,vx:0,vy:-.5,t:12,c:RAINBOW[(frame>>2)%6]});
@@ -2569,8 +2596,13 @@ function dinoSprite(step){
   rows.forEach((r,y)=>{for(let x=0;x<16;x++){const v=col[r[x]];if(v){g.fillStyle=v;g.fillRect(x,y,1,1)}}});
   return dinoCache[step]=c;
 }
-function drawDino(x,y,face,step){
-  ctx.save();ctx.imageSmoothingEnabled=false;if(face<0){ctx.translate(2*x+16,0);ctx.scale(-1,1)}ctx.drawImage(dinoSprite(step?1:0),x,y);ctx.restore();
+function drawDino(x,y,face,step,o={}){
+  ctx.save();ctx.imageSmoothingEnabled=false;if(face<0){ctx.translate(2*x+16,0);ctx.scale(-1,1)}
+  if(o.duck)ctx.drawImage(dinoSprite(0),x-1,y+5,18,13);else ctx.drawImage(dinoSprite(step?1:0),x,y);
+  const hy=o.duck?y+5:y;
+  /* volle Backen: Panzer im Maul oder gerade etwas geschluckt */
+  if(o.mouth||o.gulp){R(x+10,hy+4,6,5,INK);R(x+11,hy+5,4,3,o.mouth?'#7b4bb5':'#4cc860');if(o.mouth)R(x+12,hy+5,2,1,'#b58ae6')}
+  ctx.restore();
 }
 function drawTongue(x,y,face,len){
   if(len<=0)return;const mx=face>0?x+15:x+1,my=y+5;
@@ -2785,7 +2817,7 @@ function openSelect(mode){
   document.getElementById('lobbyTitle').textContent=mode==='sp'?'Figur wählen':'Lokal spielen';
   document.getElementById('lobbyHint').innerHTML=mode==='sp'
     ?'<b>← →</b> oder <b>A/D</b> wählen · <b>Springen</b> oder <b>Enter</b> bestätigen'
-    :'Beitreten mit Springen: <b>W</b> (Tastatur links), <b>↑</b> (Tastatur rechts) oder <b>A</b> am Gamepad. Dann links/rechts wählen und mit Springen bestätigen. Ducken nimmt zurück.';
+    :'Beitreten: <b>Leertaste</b> (Tastatur links), <b>Enter</b> (Tastatur rechts) oder <b>A</b> am Gamepad. Dann links/rechts wählen und mit Springen bestätigen. Ducken nimmt zurück.';
   show('lobby');
 }
 function renderLobby(){
@@ -2995,7 +3027,7 @@ function hostStart(){
 function sendSnap(){
   if(!net.gr)return;
   const r=Math.round;
-  const P=game.players.map(p=>[p.id,r(p.x),r(p.y),p.face,(p.dead?1:0)|(p.out?2:0)|(p.big?4:0)|(p.duck?8:0)|(p.inv>0?32:0)|(p.carry||p.carryP?64:0)|(p.step?128:0)|(p.wall?256:0)|(p.pound===2?512:0)|(p.bubble?1024:0)|(p.carriedBy?2048:0)|(p.star>0?4096:0)|(p.fire?8192:0)|(p.pipeT>0||p.pipeOut>0?16384:0)|(p.atGoal?32768:0)|(p.ice?65536:0)|(p.feather?131072:0)|(p.mini?262144:0)|(p.glide?524288:0)|(p.mount?1048576:0)|(p.tongueT>0?2097152:0)|(p.fluttering?4194304:0),
+  const P=game.players.map(p=>[p.id,r(p.x),r(p.y),p.face,(p.dead?1:0)|(p.out?2:0)|(p.big?4:0)|(p.duck?8:0)|(p.inv>0?32:0)|(p.carry||p.carryP?64:0)|(p.step?128:0)|(p.wall?256:0)|(p.pound===2?512:0)|(p.bubble?1024:0)|(p.carriedBy?2048:0)|(p.star>0?4096:0)|(p.fire?8192:0)|(p.pipeT>0||p.pipeOut>0?16384:0)|(p.atGoal?32768:0)|(p.ice?65536:0)|(p.feather?131072:0)|(p.mini?262144:0)|(p.glide?524288:0)|(p.mount?1048576:0)|(p.tongueT>0?2097152:0)|(p.fluttering?4194304:0)|(p.mouth?8388608:0)|(p.gulpT>0?16777216:0),
     p.w,p.h,p.lives,p.coins,p.score,p.ch,p.name||'',p.tp|0,p.imp|0,Math.round((p.impVy||0)*10)/10,Math.round(p.vx*10)/10,Math.round(p.vy*10)/10,p.carriedBy?p.carriedBy.id:-1,p.hat|0]);
   const dist=e=>{let d=1e9;for(const p of game.players)if(!p.out)d=Math.min(d,Math.abs(p.x-e.x));return d};
   const E=L.enemies.filter(e=>inViews(e.x,48)).sort((a,b)=>dist(a)-dist(b)).slice(0,22).map(e=>[e.id,e.type,EST.indexOf(e.st),r(e.x),r(e.y),e.vx>0?1:0,
@@ -3116,7 +3148,7 @@ function applySnap(s){
   game.players=(s.P||[]).map(a=>{
     const id=a[0]&3,f=a[4];let p=pm.get(id);
     if(!p){if(id===net.mySlot){p=newPlayer(id,'sp',0,'');p.local=true;p.tp=-1}else p={id};p.x=a[1];p.y=a[2]}
-    const auth={dead:!!(f&1),out:!!(f&2),inv:(f&32)?1:0,carrying:!!(f&64),bubble:!!(f&1024),carried:!!(f&2048),star:(f&4096)?1:0,fire:!!(f&8192),inPipe:!!(f&16384),atGoal:!!(f&32768),ice:!!(f&65536),feather:!!(f&131072),glide:!!(f&524288),mount:!!(f&1048576),tongueOn:!!(f&2097152),flutOn:!!(f&4194304),hat:cleanHat(a[18]),
+    const auth={dead:!!(f&1),out:!!(f&2),inv:(f&32)?1:0,carrying:!!(f&64),bubble:!!(f&1024),carried:!!(f&2048),star:(f&4096)?1:0,fire:!!(f&8192),inPipe:!!(f&16384),atGoal:!!(f&32768),ice:!!(f&65536),feather:!!(f&131072),glide:!!(f&524288),mount:!!(f&1048576),tongueOn:!!(f&2097152),flutOn:!!(f&4194304),mouth:(f&8388608)?1:0,gulpOn:!!(f&16777216),hat:cleanHat(a[18]),
       carriedById:Number.isInteger(a[17])?a[17]:-1,lives:a[7],coins:a[8],score:a[9],
       ch:Math.max(0,Math.min(CHARS.length-1,a[10]|0)),name:cleanName(a[11])};
     const lk={face:a[3]>0?1:-1,big:!!(f&4),mini:!!(f&262144),duck:!!(f&8),step:(f&128)?1:0,wall:(f&256)?1:0,pound:(f&512)?2:0,w:a[5],h:a[6]};
@@ -3314,7 +3346,7 @@ function adjust(el,dir){
   saveSettings();applySettings();refreshOptions();sfx.sel();
 }
 /* ---- Tasten belegen ---- */
-const ACT_NAMES={left:'Links',right:'Rechts',jump:'Springen',down:'Ducken',run:'Rennen',act:'Aufheben'};
+const ACT_NAMES={left:'Links',right:'Rechts',jump:'Springen',up:'Hoch',down:'Ducken',run:'Rennen',act:'Aufheben'};
 const keyName=c=>({Space:'Leertaste',ArrowLeft:'←',ArrowRight:'→',ArrowUp:'↑',ArrowDown:'↓',ShiftLeft:'Shift L',ShiftRight:'Shift R',ControlLeft:'Strg L',ControlRight:'Strg R',
   AltLeft:'Alt',AltRight:'Alt Gr',Enter:'Enter',Tab:'Tab',Backspace:'Rück',CapsLock:'Feststell',Numpad0:'Num 0'}[c]||c.replace(/^Key/,'').replace(/^Digit/,'').replace(/^Numpad/,'Num '));
 let bindWait=null;
@@ -3428,7 +3460,7 @@ function selectKey(code){
   const SPMAP={KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',KeyW:'ok',Space:'ok',ArrowUp:'ok',Enter:'ok',KeyS:'cancel',ArrowDown:'cancel'};
   if(cur==='lobby'){
     if(lobby.mode==='sp'){const a=SPMAP[code];if(a)lobbyAct('sp',a);return}
-    const K1={KeyA:'left',KeyD:'right',KeyW:'ok',Space:'ok',KeyS:'cancel'},K2={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'ok',ArrowDown:'cancel'};
+    const K1={KeyA:'left',KeyD:'right',KeyW:'ok',Space:'ok',KeyS:'cancel'},K2={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'ok',Enter:'ok',ArrowDown:'cancel'};
     if(K1[code])lobbyAct('k1',K1[code]);else if(K2[code])lobbyAct('k2',K2[code]);
     return;
   }

@@ -9,7 +9,8 @@ Ein Jump'n'Run im Retro-Stil für den Browser – allein, zu viert an einem Ger�
 | Aktion | Tastatur | Gamepad |
 |---|---|---|
 | Laufen | A/D oder ← → | Stick |
-| Springen | W, Leertaste oder ↑ | A |
+| Springen | Leertaste (Spieler 2: Enter) | A |
+| Hoch / von Hopsi absteigen | W oder ↑ | Stick hoch |
 | Ducken / Stampfen (in der Luft) | S oder ↓ | Stick runter |
 | Rennen | Shift | X |
 | Aufheben / Mitspieler tragen | Strg | Y |
@@ -30,7 +31,8 @@ Alle Tasten lassen sich unter **Optionen → Steuerung → Tasten belegen** änd
 - **Laden:** Pilz, Glutbeere, Herz und Funkelstern für Münzen
 - **Power-ups:** Pilz (groß), Glutbeere (Feuerbälle), Eisblume (friert Gegner ein – man kann auf ihnen stehen), Feder (Springen halten zum Gleiten), Mini-Pilz (winzig, springt hoch, ein Treffer zählt). Treffer stufen eine Stufe ab, Power-ups bleiben über Level erhalten
 - **Gegner:** Moosling, Käfer, Igel, Fledermaus, Werfer, Schnappblume, Stachelkugel (fällt von der Decke), Feuerspucker, Flügelpanzer und ein Endboss in jeder Burg – bei halber Lebensleiste wird er wütend (Phase 2)
-- **Reittier Hopsi:** Das Dino-Ei knackt auf, wenn man es berührt, und Hopsi springt heraus. Zunge mit Strg frisst Gegner, Springen halten zum Flattern, Ducken + Springen zum Absteigen
+- **Reittier Hopsi:** Das Dino-Ei knackt auf, wenn man es berührt, und Hopsi springt heraus. Zunge mit Strg zieht Gegner ins Maul, Schildkröten-Panzer behält Hopsi im Maul und spuckt ihn mit Strg wieder aus. Hopsi duckt sich mit, Springen halten zum Flattern, W/↑ zum Absteigen
+- **Große Münzen** bleiben nach einem Tod am Checkpoint gesammelt
 - **Gegner-Bounce:** Beim Draufspringen Springen gedrückt halten, um hoch abzuprallen
 - **Weltende:** Statistik mit Zeit, Münzen, Gegnern, großen Münzen und Toden
 - **Figur & Aussehen:** Farbe, Halstuch, Brille, Umhang und 12 Hüte (durch Erfolge freischaltbar)
