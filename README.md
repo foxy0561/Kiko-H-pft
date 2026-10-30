@@ -33,6 +33,9 @@ Alle Tasten lassen sich unter **Optionen → Steuerung → Tasten belegen** änd
 - **Gegner:** Moosling, Käfer, Igel, Fledermaus, Werfer, Schnappblume, Stachelkugel (fällt von der Decke), Feuerspucker, Flügelpanzer und ein Endboss in jeder Burg – bei halber Lebensleiste wird er wütend (Phase 2)
 - **Reittier Hopsi:** Das Dino-Ei knackt auf, wenn man es berührt, und Hopsi springt heraus. Zunge mit Strg zieht Gegner ins Maul, Schildkröten-Panzer behält Hopsi im Maul und spuckt ihn mit Strg wieder aus. Hopsi duckt sich mit, Springen halten zum Flattern, W/↑ zum Absteigen
 - **Türen** (Editor): Türen gehören paarweise zusammen, W/↑ davor geht hindurch
+- **P-Knopf:** Draufspringen verwandelt alle Ziegel für 10 Sekunden in Münzen, der Knopf ist danach weg
+- **Röhren an Decke und Wand** (Editor): Deckenröhre mit W/↑ von unten betreten, Wandröhren durch Hineinlaufen. Items und Gegner auf eine Röhre setzen lässt sie immer wieder herauskommen
+- **Neu-laden-Knopf** oben rechts im Hauptmenü (praktisch im Vollbild)
 - **Schalterblock:** Kopfstoß tauscht rote und blaue Blöcke (fest ↔ durchlässig)
 - **Editor:** Bosse und Dino-Ei können in Sternblöcke gesteckt werden – das Ei platzt beim Herauskommen sofort auf
 - **Große Münzen** bleiben nach einem Tod am Checkpoint gesammelt
