@@ -41,7 +41,7 @@ Alle Tasten lassen sich unter **Optionen → Steuerung → Tasten belegen** änd
 - **Große Münzen** bleiben nach einem Tod am Checkpoint gesammelt
 - **Gegner-Bounce:** Beim Draufspringen Springen gedrückt halten, um hoch abzuprallen
 - **Weltende:** Statistik mit Zeit, Münzen, Gegnern, großen Münzen und Toden
-- **Geheime Figur Foxy:** erscheint in der Figurenauswahl nur mit dem Spielernamen foxy0561
+- **Geheime Figur Foxy:** erscheint in der Figurenauswahl nur mit dem Spielernamen foxy0561 – gleiche Größe und Trefferfläche wie alle Figuren, nur detaillierter gezeichnet
 - **Figur & Aussehen:** Farbe, Halstuch, Brille, Umhang und 12 Hüte (durch Erfolge freischaltbar)
 - **Gamepad frei belegbar** unter Optionen → Steuerung
 - **Wettrennen online:** jeder spielt auf seiner eigenen Karte, Mitspieler sieht man als Geister – wer zuerst Welt 1, Welt 1–2 oder alle Welten schafft, gewinnt
